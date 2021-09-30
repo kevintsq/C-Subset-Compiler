@@ -7,15 +7,14 @@
 
 
 #include <fstream>
-#include <iostream>
 #include <vector>
-#include <cstring>
 #include <cctype>
 #include "token.h"
 
+
 class Tokenizer {
 public:
-    std::vector<Token *> tokens;
+    std::vector<TokenP> tokens;
 
     explicit Tokenizer(const char *filename);
 
@@ -33,19 +32,19 @@ public:
     }
 
     template <typename KeywordTokenClass>
-    static inline Token *get_ident_or_keyword(char **buffer, const char *current, int line) {
+    static inline TokenP get_ident_or_keyword(char **buffer, const char *current, int line) {
         if (Tokenizer::isalnum_(*(*buffer)++)) {
             while (Tokenizer::isalnum_(*(*buffer)++));
-            return new Identifier(line, current, --(*buffer) - current);
+            return std::make_shared<Token *>(new Identifier(line, current, --(*buffer) - current));
         } else {
             (*buffer)--;
-            return new KeywordTokenClass(line);
+            return std::make_shared<Token *>(new KeywordTokenClass(line));
         }
     }
 
     void print() {
-        for (auto &token: this->tokens) {
-            token->print();
+        for (const auto& token: this->tokens) {
+            (*token)->print();
         }
     }
 };

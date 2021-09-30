@@ -5,8 +5,16 @@
 #ifndef CODE_PARSER_H
 #define CODE_PARSER_H
 
+#include <vector>
+#include "token.h"
+
 
 class Parser {
+public:
+    explicit Parser(std::vector<TokenP> &tokens);
+
+    void print();
+
     void parse_comp_unit();
 
     void parse_decl();

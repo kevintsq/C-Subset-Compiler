@@ -7,7 +7,9 @@
 
 #include <iostream>
 #include <cstring>
+#include <memory>
 #include "token_code.h"
+
 
 class Token {
 public:
@@ -20,6 +22,10 @@ public:
 
     virtual void print() = 0;
 };
+
+
+using TokenP = std::shared_ptr<Token *>;
+
 
 class Identifier : public Token {
 public:

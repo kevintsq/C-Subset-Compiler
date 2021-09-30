@@ -4,6 +4,15 @@
 
 #include "parser.h"
 
+
+Parser::Parser(std::vector<TokenP> &tokens) {
+
+}
+
+void Parser::print() {
+
+}
+
 void Parser::parse_comp_unit() {
 
 }
