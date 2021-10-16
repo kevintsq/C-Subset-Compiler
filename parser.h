@@ -6,78 +6,130 @@
 #define CODE_PARSER_H
 
 #include <vector>
+#include <unordered_map>
+#include <functional>
 #include "token.h"
 
+using TokenIter = std::vector<TokenP>::iterator;
 
 class Parser {
 public:
+    std::vector<TokenP> &tokens;
+    std::vector<ElementP> elements;
+    std::unordered_map<std::string, IdentP> sym_table;
+
     explicit Parser(std::vector<TokenP> &tokens);
 
-    void print();
+    void print() {
+        for (auto &e : elements) {
+            e->print();
+        }
+    }
 
-    void parse_comp_unit();
+    static inline bool starts_with_decl(const TokenIter &tk) {
+        auto next = (*tk)->type;
+        return next == CONSTTK || (next == INTTK && (*(tk + 2))->type != LPARENT);
+    }
 
-    void parse_decl();
+    static inline bool starts_with_func_def(const TokenIter &tk) {
+        auto next = (*tk)->type;
+        return next == VOIDTK || (next == INTTK && (*(tk + 1))->type != MAINTK && (*(tk + 2))->type == LPARENT);
+    }
 
-    void parse_const_decl();
+    static inline bool starts_with_expr(const TokenIter &tk) {
+        switch ((*tk)->type) {
+            case LPARENT:
+            case IDENFR:
+            case INTCON:
+            case PLUS:
+            case MINU:
+            case NOT:
+                return true;
+            default:
+                return false;
+        }
+    }
 
-    void parse_basic_type();
+    static inline bool starts_with_stmt(const TokenIter &tk) {
+        switch ((*tk)->type) {
+            case LBRACE:
+            case SEMICN:
+            case IFTK:
+            case WHILETK:
+            case BREAKTK:
+            case CONTINUETK:
+            case RETURNTK:
+            case PRINTFTK:
+                return true;
+            default:
+                return starts_with_expr(tk);
+        }
+    }
 
-    void parse_const_def();
+    template <typename T>
+    void _parse_expr(TokenIter &tk,
+                     void (Parser::*parse_first)(TokenIter &),
+                     const std::function<bool(TokenCode)> &predicate);
 
-    void parse_const_init_val();
+    void parse_comp_unit(TokenIter &tk);
 
-    void parse_var_decl();
+    void parse_decl(TokenIter &tk);
 
-    void parse_var_def();
+    void parse_const_decl(TokenIter &tk);
 
-    void parse_var_init();
+    void parse_const_def(TokenIter &tk);
 
-    void parse_func_def();
+    void parse_const_init_val(TokenIter &tk);
 
-    void parse_main_func_def();
+    void parse_var_decl(TokenIter &tk);
 
-    void parse_func_type();
+    void parse_var_def(TokenIter &tk);
 
-    void parse_func_formal_params();
+    void parse_init_val(TokenIter &tk);
 
-    void parse_func_formal_param();
+    void parse_func_def(TokenIter &tk);
 
-    void parse_block();
+    void parse_main_func_def(TokenIter &tk);
 
-    void parse_block_item();
+    void parse_func_type(TokenIter &tk);
 
-    void parse_stmt();
+    void parse_func_formal_params(TokenIter &tk);
 
-    void parse_expr();
+    void parse_func_formal_param(TokenIter &tk);
 
-    void parse_cond_expr();
+    void parse_block(TokenIter &tk);
 
-    void parse_lvalue_expr();
+    void parse_block_item(TokenIter &tk);
 
-    void parse_prim_expr();
+    void parse_stmt(TokenIter &tk);
 
-    void parse_number();
+    void parse_expr(TokenIter &tk);
 
-    void parse_unary_expr();
+    void parse_cond_expr(TokenIter &tk);
 
-    void parse_unary_op();
+    void parse_lvalue(TokenIter &tk);
 
-    void parse_func_real_expr();
+    void parse_primary_expr(TokenIter &tk);
 
-    void parse_muldiv_expr();
+    void parse_number(TokenIter &tk);
 
-    void parse_addsub_expr();
+    void parse_unary_expr(TokenIter &tk);
 
-    void parse_rel_expr();
+    void parse_func_real_params(TokenIter &tk);
 
-    void parse_eq_expr();
+    void parse_muldiv_expr(TokenIter &tk);
 
-    void parse_logical_and_expr();
+    void parse_addsub_expr(TokenIter &tk);
 
-    void parse_logical_or_expr();
+    void parse_rel_expr(TokenIter &tk);
 
-    void parse_const_expr();
+    void parse_eq_expr(TokenIter &tk);
+
+    void parse_logical_and_expr(TokenIter &tk);
+
+    void parse_logical_or_expr(TokenIter &tk);
+
+    void parse_const_expr(TokenIter &tk);
 };
 
 

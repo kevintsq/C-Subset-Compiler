@@ -35,16 +35,16 @@ public:
     static inline TokenP get_ident_or_keyword(char **buffer, const char *current, int line) {
         if (Tokenizer::isalnum_(*(*buffer)++)) {
             while (Tokenizer::isalnum_(*(*buffer)++));
-            return std::make_shared<Token *>(new Identifier(line, current, --(*buffer) - current));
+            return std::make_shared<Identifier>(line, current, --(*buffer) - current);
         } else {
             (*buffer)--;
-            return std::make_shared<Token *>(new KeywordTokenClass(line));
+            return std::make_shared<KeywordTokenClass>(line);
         }
     }
 
     void print() {
         for (const auto& token: this->tokens) {
-            (*token)->print();
+            token->print();
         }
     }
 };

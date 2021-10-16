@@ -7,526 +7,383 @@
 
 #include <iostream>
 #include <cstring>
+#include <string>
 #include <memory>
+#include <vector>
+#include "element.h"
 #include "token_code.h"
+#include "type_code.h"
 
 
-class Token {
+class Token : public Element {
 public:
     TokenCode type;
-    int line;
+    const int line;
 
-    explicit Token(int line) : line(line) {}
+    Token(int line, TokenCode type) : line(line), type(type) {}
 
     Token(const Token &token) = delete;
-
-    virtual void print() = 0;
 };
 
 
-using TokenP = std::shared_ptr<Token *>;
+using TokenP = std::shared_ptr<Token>;
 
 
 class Identifier : public Token {
 public:
     std::string value;
+    bool is_const = false;
+    TypeCode val_type;
+    std::vector<int> array_dims;
+    std::vector<std::shared_ptr<Identifier>> func_params;
+    std::vector<std::pair<int, int>> nest_info;
 
-    Identifier(int line, const char *start, long long length) : Token(line) {
-        this->type = IDENFR;
+    Identifier(int line, const char *start, long long length) : Token(line, IDENFR) {
         this->value.assign(start, length);
+        this->name = "IDENFR " + value;
     }
 
     Identifier(const Identifier &token) = delete;
-
-    void print() override {
-        std::cout << "IDENFR " << this->value << std::endl;
-    }
 };
+
+using IdentP = std::shared_ptr<Identifier>;
 
 class IntConst : public Token {
 public:
     long value;
 
-    IntConst(int line, int value) : Token(line), value(value) {
-        this->type = INTCON;
+    IntConst(int line, int value) : Token(line, INTCON), value(value) {
+        this->name = "INTCON " + std::to_string(this->value);
     }
 
     IntConst(const IntConst &token) = delete;
-
-    void print() override {
-        std::cout << "INTCON " << this->value << std::endl;
-    }
 };
 
 class FormatString : public Token {
 public:
     std::string value;
 
-    FormatString(int line, const char *start, long long length) : Token(line) {
-        this->type = STRCON;
+    FormatString(int line, const char *start, long long length) : Token(line, STRCON) {
         this->value.assign(start, length);
+        this->name = "STRCON " + this->value;
     }
 
     FormatString(const FormatString &token) = delete;
-
-    void print() override {
-        std::cout << "STRCON " << this->value << std::endl;
-    }
 };
 
 class MainToken : public Token {
 public:
-    explicit MainToken(int line) : Token(line) {
-        this->type = MAINTK;
+    explicit MainToken(int line) : Token(line, MAINTK) {
+        this->name = "MAINTK main";
     }
 
     MainToken(const MainToken &token) = delete;
-
-    void print() override {
-        std::cout << "MAINTK main" << std::endl;
-    }
 };
 
 class ConstToken : public Token {
 public:
-    explicit ConstToken(int line) : Token(line) {
-        this->type = CONSTTK;
+    explicit ConstToken(int line) : Token(line, CONSTTK) {
+        this->name = "CONSTTK const";
     }
 
     ConstToken(const ConstToken &token) = delete;
-
-    void print() override {
-        std::cout << "CONSTTK const" << std::endl;
-    }
 };
 
 class IntToken : public Token {
 public:
-    explicit IntToken(int line) : Token(line) {
-        this->type = INTTK;
+    explicit IntToken(int line) : Token(line, INTTK) {
+        this->name = "INTTK int";
     }
 
     IntToken(const IntToken &token) = delete;
-
-    void print() override {
-        std::cout << "INTTK int" << std::endl;
-    }
 };
 
 class VoidToken : public Token {
 public:
-    explicit VoidToken(int line) : Token(line) {
-        this->type = VOIDTK;
+    explicit VoidToken(int line) : Token(line, VOIDTK) {
+        this->name = "VOIDTK void";
     }
 
     VoidToken(const VoidToken &token) = delete;
-
-    void print() override {
-        std::cout << "VOIDTK void" << std::endl;
-    }
 };
 
 class BreakToken : public Token {
 public:
-    explicit BreakToken(int line) : Token(line) {
-        this->type = BREAKTK;
+    explicit BreakToken(int line) : Token(line, BREAKTK) {
+        this->name = "BREAKTK break";
     }
 
     BreakToken(const BreakToken &token) = delete;
-
-    void print() override {
-        std::cout << "BREAKTK break" << std::endl;
-    }
 };
 
 class ContinueToken : public Token {
 public:
-    explicit ContinueToken(int line) : Token(line) {
-        this->type = CONTINUETK;
+    explicit ContinueToken(int line) : Token(line, CONTINUETK) {
+        this->name = "CONTINUETK continue";
     }
 
     ContinueToken(const ContinueToken &token) = delete;
-
-    void print() override {
-        std::cout << "CONTINUETK continue" << std::endl;
-    }
 };
 
 class IfToken : public Token {
 public:
-    explicit IfToken(int line) : Token(line) {
-        this->type = IFTK;
+    explicit IfToken(int line) : Token(line, IFTK) {
+        this->name = "IFTK if";
     }
 
     IfToken(const IfToken &token) = delete;
-
-    void print() override {
-        std::cout << "IFTK if" << std::endl;
-    }
 };
 
 class ElseToken : public Token {
 public:
-    explicit ElseToken(int line) : Token(line) {
-        this->type = ELSETK;
+    explicit ElseToken(int line) : Token(line, ELSETK) {
+        this->name = "ELSETK else";
     }
 
     ElseToken(const ElseToken &token) = delete;
-
-    void print() override {
-        std::cout << "ELSETK else" << std::endl;
-    }
 };
 
 class WhileToken : public Token {
 public:
-    explicit WhileToken(int line) : Token(line) {
-        this->type = WHILETK;
+    explicit WhileToken(int line) : Token(line, WHILETK) {
+        this->name = "WHILETK while";
     }
 
     WhileToken(const WhileToken &token) = delete;
-
-    void print() override {
-        std::cout << "WHILETK while" << std::endl;
-    }
 };
 
 class GetintToken : public Token {
 public:
-    explicit GetintToken(int line) : Token(line) {
-        this->type = GETINTTK;
+    explicit GetintToken(int line) : Token(line, GETINTTK) {
+        this->name = "GETINTTK getint";
     }
 
     GetintToken(const GetintToken &token) = delete;
-
-    void print() override {
-        std::cout << "GETINTTK getint" << std::endl;
-    }
 };
 
 class PrintfToken : public Token {
 public:
-    explicit PrintfToken(int line) : Token(line) {
-        this->type = PRINTFTK;
+    explicit PrintfToken(int line) : Token(line, PRINTFTK) {
+        this->name = "PRINTFTK printf";
     }
 
     PrintfToken(const PrintfToken &token) = delete;
-
-    void print() override {
-        std::cout << "PRINTFTK printf" << std::endl;
-    }
 };
 
 class ReturnToken : public Token {
 public:
-    explicit ReturnToken(int line) : Token(line) {
-        this->type = RETURNTK;
+    explicit ReturnToken(int line) : Token(line, RETURNTK) {
+        this->name = "RETURNTK return";
     }
 
     ReturnToken(const ReturnToken &token) = delete;
-
-    void print() override {
-        std::cout << "RETURNTK return" << std::endl;
-    }
 };
 
 class NotToken : public Token {
 public:
-    explicit NotToken(int line) : Token(line) {
-        this->type = NOT;
+    explicit NotToken(int line) : Token(line, NOT) {
+        this->name = "NOT !";
     }
 
     NotToken(const NotToken &token) = delete;
-
-    void print() override {
-        std::cout << "NOT !" << std::endl;
-    }
 };
 
 class AndToken : public Token {
 public:
-    explicit AndToken(int line) : Token(line) {
-        this->type = AND;
+    explicit AndToken(int line) : Token(line, AND) {
+        this->name = "AND &&";
     }
 
     AndToken(const AndToken &token) = delete;
-
-    void print() override {
-        std::cout << "AND &&" << std::endl;
-    }
 };
 
 class OrToken : public Token {
 public:
-    explicit OrToken(int line) : Token(line) {
-        this->type = OR;
+    explicit OrToken(int line) : Token(line, OR) {
+        this->name = "OR ||";
     }
 
     OrToken(const OrToken &token) = delete;
-
-    void print() override {
-        std::cout << "OR ||" << std::endl;
-    }
 };
 
 class AddToken : public Token {
 public:
-    explicit AddToken(int line) : Token(line) {
-        this->type = PLUS;
+    explicit AddToken(int line) : Token(line, PLUS) {
+        this->name = "PLUS +";
     }
 
     AddToken(const AddToken &token) = delete;
-
-    void print() override {
-        std::cout << "PLUS +" << std::endl;
-    }
 };
 
 class SubToken : public Token {
 public:
-    explicit SubToken(int line) : Token(line) {
-        this->type = MINU;
+    explicit SubToken(int line) : Token(line, MINU) {
+        this->name = "MINU -";
     }
 
     SubToken(const SubToken &token) = delete;
-
-    void print() override {
-        std::cout << "MINU -" << std::endl;
-    }
 };
 
 class MulToken : public Token {
 public:
-    explicit MulToken(int line) : Token(line) {
-        this->type = MULT;
+    explicit MulToken(int line) : Token(line, MULT) {
+        this->name = "MULT *";
     }
 
     MulToken(const MulToken &token) = delete;
-
-    void print() override {
-        std::cout << "MULT *" << std::endl;
-    }
 };
 
 class DivToken : public Token {
 public:
-    explicit DivToken(int line) : Token(line) {
-        this->type = DIV;
+    explicit DivToken(int line) : Token(line, DIV) {
+        this->name = "DIV /";
     }
 
     DivToken(const DivToken &token) = delete;
-
-    void print() override {
-        std::cout << "DIV /" << std::endl;
-    }
 };
 
 class ModToken : public Token {
 public:
-    explicit ModToken(int line) : Token(line) {
-        this->type = MOD;
+    explicit ModToken(int line) : Token(line, MOD) {
+        this->name = "MOD %";
     }
 
     ModToken(const ModToken &token) = delete;
-
-    void print() override {
-        std::cout << "MOD %" << std::endl;
-    }
 };
 
 class LtToken : public Token {
 public:
-    explicit LtToken(int line) : Token(line) {
-        this->type = LSS;
+    explicit LtToken(int line) : Token(line, LSS) {
+        this->name = "LSS <";
     }
 
     LtToken(const LtToken &token) = delete;
-
-    void print() override {
-        std::cout << "LSS <" << std::endl;
-    }
 };
 
 class LeToken : public Token {
 public:
-    explicit LeToken(int line) : Token(line) {
-        this->type = LEQ;
+    explicit LeToken(int line) : Token(line, LEQ) {
+        this->name = "LEQ <=";
     }
 
     LeToken(const LeToken &token) = delete;
-
-    void print() override {
-        std::cout << "LEQ <=" << std::endl;
-    }
 };
 
 class GtToken : public Token {
 public:
-    explicit GtToken(int line) : Token(line) {
-        this->type = GRE;
+    explicit GtToken(int line) : Token(line, GRE) {
+        this->name = "GRE >";
     }
 
     GtToken(const GtToken &token) = delete;
-
-    void print() override {
-        std::cout << "GRE >" << std::endl;
-    }
 };
 
 class GeToken : public Token {
 public:
-    explicit GeToken(int line) : Token(line) {
-        this->type = GEQ;
+    explicit GeToken(int line) : Token(line, GEQ) {
+        this->name = "GEQ >=";
     }
 
     GeToken(const GeToken &token) = delete;
-
-    void print() override {
-        std::cout << "GEQ >=" << std::endl;
-    }
 };
 
 class EqToken : public Token {
 public:
-    explicit EqToken(int line) : Token(line) {
-        this->type = EQL;
+    explicit EqToken(int line) : Token(line, EQL) {
+        this->name = "EQL ==";
     }
 
     EqToken(const EqToken &token) = delete;
-
-    void print() override {
-        std::cout << "EQL ==" << std::endl;
-    }
 };
 
 class NeToken : public Token {
 public:
-    explicit NeToken(int line) : Token(line) {
-        this->type = NEQ;
+    explicit NeToken(int line) : Token(line, NEQ) {
+        this->name = "NEQ !=";
     }
 
     NeToken(const NeToken &token) = delete;
-
-    void print() override {
-        std::cout << "NEQ !=" << std::endl;
-    }
 };
 
 class AssignToken : public Token {
 public:
-    explicit AssignToken(int line) : Token(line) {
-        this->type = ASSIGN;
+    explicit AssignToken(int line) : Token(line, ASSIGN) {
+        this->name = "ASSIGN =";
     }
 
     AssignToken(const AssignToken &token) = delete;
-
-    void print() override {
-        std::cout << "ASSIGN =" << std::endl;
-    }
 };
 
 class Semicolon : public Token {
 public:
-    explicit Semicolon(int line) : Token(line) {
-        this->type = SEMICN;
+    explicit Semicolon(int line) : Token(line, SEMICN) {
+        this->name = "SEMICN ;";
     }
 
     Semicolon(const Semicolon &token) = delete;
-
-    void print() override {
-        std::cout << "SEMICN ;" << std::endl;
-    }
 };
 
 class Comma : public Token {
 public:
-    explicit Comma(int line) : Token(line) {
-        this->type = COMMA;
+    explicit Comma(int line) : Token(line, COMMA) {
+        this->name = "COMMA ,";
     }
 
     Comma(const Comma &token) = delete;
-
-    void print() override {
-        std::cout << "COMMA ," << std::endl;
-    }
 };
 
 class LParen : public Token {
 public:
-    explicit LParen(int line) : Token(line) {
-        this->type = LPARENT;
+    explicit LParen(int line) : Token(line, LPARENT) {
+        this->name = "LPARENT (";
     }
 
     LParen(const LParen &token) = delete;
-
-    void print() override {
-        std::cout << "LPARENT (" << std::endl;
-    }
 };
 
 class RParen : public Token {
 public:
-    explicit RParen(int line) : Token(line) {
-        this->type = RPARENT;
+    explicit RParen(int line) : Token(line, RPARENT) {
+        this->name = "RPARENT )";
     }
 
     RParen(const RParen &token) = delete;
-
-    void print() override {
-        std::cout << "RPARENT )" << std::endl;
-    }
 };
 
 class LBracket : public Token {
 public:
-    explicit LBracket(int line) : Token(line) {
-        this->type = LBRACK;
+    explicit LBracket(int line) : Token(line, LBRACK) {
+        this->name = "LBRACK [";
     }
 
     LBracket(const LBracket &token) = delete;
-
-    void print() override {
-        std::cout << "LBRACK [" << std::endl;
-    }
 };
 
 class RBracket : public Token {
 public:
-    explicit RBracket(int line) : Token(line) {
-        this->type = RBRACK;
+    explicit RBracket(int line) : Token(line, RBRACK) {
+        this->name = "RBRACK ]";
     }
 
     RBracket(const RBracket &token) = delete;
-
-    void print() override {
-        std::cout << "RBRACK ]" << std::endl;
-    }
 };
 
 class LBrace : public Token {
 public:
-    explicit LBrace(int line) : Token(line) {
-        this->type = LBRACE;
+    explicit LBrace(int line) : Token(line, LBRACE) {
+        this->name = "LBRACE {";
     }
 
     LBrace(const LBrace &token) = delete;
-
-    void print() override {
-        std::cout << "LBRACE {" << std::endl;
-    }
 };
 
 class RBrace : public Token {
 public:
-    explicit RBrace(int line) : Token(line) {
-        this->type = RBRACE;
+    explicit RBrace(int line) : Token(line, RBRACE) {
+        this->name = "RBRACE }";
     }
 
     RBrace(const RBrace &token) = delete;
-
-    void print() override {
-        std::cout << "RBRACE }" << std::endl;
-    }
 };
 
 #endif //CODE_TOKEN_H

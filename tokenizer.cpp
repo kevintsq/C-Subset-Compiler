@@ -33,19 +33,19 @@ Tokenizer::Tokenizer(const char *filename) {
         } else if (isspace(*buffer)) {  // cannot omit this
             buffer++;
         } else if (*buffer == '+') {
-            this->tokens.push_back(std::make_shared<Token *>(new AddToken(line)));
+            this->tokens.push_back(std::make_shared<AddToken>(line));
             buffer++;
         } else if (*buffer == '-') {
-            this->tokens.push_back(std::make_shared<Token *>(new SubToken(line)));
+            this->tokens.push_back(std::make_shared<SubToken>(line));
             buffer++;
         } else if ((number = strtol(current, &buffer, 10)) || current != buffer) {
             // Must be after the leading 3!
-            this->tokens.push_back(std::make_shared<Token *>(new IntConst(line, number)));
+            this->tokens.push_back(std::make_shared<IntConst>(line, number));
         } else if (*buffer == '"') {
             while (*++buffer != '"') {
                 if (*buffer == '\0') { return; }  // Bad FormatString
             }
-            this->tokens.push_back(std::make_shared<Token *>(new FormatString(line, current, ++buffer - current)));
+            this->tokens.push_back(std::make_shared<FormatString>(line, current, ++buffer - current));
         } else if (startswith(&buffer, "//")) {
             while (*buffer++ != '\n') {
                 if (*buffer == '\0') { return; }
@@ -61,17 +61,17 @@ Tokenizer::Tokenizer(const char *filename) {
                 else if (*buffer == '\0') { return; }  // Bad Comment
             }
         } else if (startswith(&buffer, "&&")) {
-            this->tokens.push_back(std::make_shared<Token *>(new AndToken(line)));
+            this->tokens.push_back(std::make_shared<AndToken>(line));
         } else if (startswith(&buffer, "||")) {
-            this->tokens.push_back(std::make_shared<Token *>(new OrToken(line)));
+            this->tokens.push_back(std::make_shared<OrToken>(line));
         } else if (startswith(&buffer, "<=")) {
-            this->tokens.push_back(std::make_shared<Token *>(new LeToken(line)));
+            this->tokens.push_back(std::make_shared<LeToken>(line));
         } else if (startswith(&buffer, ">=")) {
-            this->tokens.push_back(std::make_shared<Token *>(new GeToken(line)));
+            this->tokens.push_back(std::make_shared<GeToken>(line));
         } else if (startswith(&buffer, "==")) {
-            this->tokens.push_back(std::make_shared<Token *>(new EqToken(line)));
+            this->tokens.push_back(std::make_shared<EqToken>(line));
         } else if (startswith(&buffer, "!=")) {
-            this->tokens.push_back(std::make_shared<Token *>(new NeToken(line)));
+            this->tokens.push_back(std::make_shared<NeToken>(line));
         } else if (startswith(&buffer, "main")) {
             this->tokens.push_back(Tokenizer::get_ident_or_keyword<MainToken>(&buffer, current, line));
         } else if (startswith(&buffer, "const")) {
@@ -98,24 +98,24 @@ Tokenizer::Tokenizer(const char *filename) {
             this->tokens.push_back(Tokenizer::get_ident_or_keyword<ReturnToken>(&buffer, current, line));
         } else if (isalpha(*buffer) || *buffer == '_') {
             while (Tokenizer::isalnum_(*++buffer));
-            this->tokens.push_back(std::make_shared<Token *>(new Identifier(line, current, buffer - current)));
+            this->tokens.push_back(std::make_shared<Identifier>(line, current, buffer - current));
         } else {
             switch (*buffer++) {
-                case '*': this->tokens.push_back(std::make_shared<Token *>(new MulToken(line))); break;
-                case '/': this->tokens.push_back(std::make_shared<Token *>(new DivToken(line))); break;
-                case '%': this->tokens.push_back(std::make_shared<Token *>(new ModToken(line))); break;
-                case '!': this->tokens.push_back(std::make_shared<Token *>(new NotToken(line))); break;
-                case ',': this->tokens.push_back(std::make_shared<Token *>(new Comma(line))); break;
-                case ';': this->tokens.push_back(std::make_shared<Token *>(new Semicolon(line))); break;
-                case '=': this->tokens.push_back(std::make_shared<Token *>(new AssignToken(line))); break;
-                case '<': this->tokens.push_back(std::make_shared<Token *>(new LtToken(line))); break;
-                case '>': this->tokens.push_back(std::make_shared<Token *>(new GtToken(line))); break;
-                case '(': this->tokens.push_back(std::make_shared<Token *>(new LParen(line))); break;
-                case ')': this->tokens.push_back(std::make_shared<Token *>(new RParen(line))); break;
-                case '[': this->tokens.push_back(std::make_shared<Token *>(new LBracket(line))); break;
-                case ']': this->tokens.push_back(std::make_shared<Token *>(new RBracket(line))); break;
-                case '{': this->tokens.push_back(std::make_shared<Token *>(new LBrace(line))); break;
-                case '}': this->tokens.push_back(std::make_shared<Token *>(new RBrace(line))); break;
+                case '*': this->tokens.push_back(std::make_shared<MulToken>(line)); break;
+                case '/': this->tokens.push_back(std::make_shared<DivToken>(line)); break;
+                case '%': this->tokens.push_back(std::make_shared<ModToken>(line)); break;
+                case '!': this->tokens.push_back(std::make_shared<NotToken>(line)); break;
+                case ',': this->tokens.push_back(std::make_shared<Comma>(line)); break;
+                case ';': this->tokens.push_back(std::make_shared<Semicolon>(line)); break;
+                case '=': this->tokens.push_back(std::make_shared<AssignToken>(line)); break;
+                case '<': this->tokens.push_back(std::make_shared<LtToken>(line)); break;
+                case '>': this->tokens.push_back(std::make_shared<GtToken>(line)); break;
+                case '(': this->tokens.push_back(std::make_shared<LParen>(line)); break;
+                case ')': this->tokens.push_back(std::make_shared<RParen>(line)); break;
+                case '[': this->tokens.push_back(std::make_shared<LBracket>(line)); break;
+                case ']': this->tokens.push_back(std::make_shared<RBracket>(line)); break;
+                case '{': this->tokens.push_back(std::make_shared<LBrace>(line)); break;
+                case '}': this->tokens.push_back(std::make_shared<RBrace>(line)); break;
             }
         }
     }
