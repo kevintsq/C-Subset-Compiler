@@ -7,8 +7,10 @@
 #define ERROR(expected, got) do { std::cout << "In " << __func__ << " line " << __LINE__ << " source code line " << (*got)->line << ", expected "#expected", got "; (*got)->print(); exit(-1); } while (0)
 
 Parser::Parser(std::vector<TokenP> &tokens) : tokens(tokens) {
-    auto tk = tokens.begin();
-    parse_comp_unit(tk);
+    if (!tokens.empty()) {
+        auto tk = tokens.begin();
+        parse_comp_unit(tk);
+    }
 }
 
 void Parser::parse_comp_unit(TokenIter &tk) {
@@ -19,7 +21,9 @@ void Parser::parse_comp_unit(TokenIter &tk) {
     while (starts_with_func_def(tk)) {
         parse_func_def(tk);
     }
-    parse_main_func_def(tk);
+    if ((*tk)->type == INTTK) {
+        parse_main_func_def(tk);
+    }
     elements.push_back(std::make_shared<CompUnit>());
 }
 
@@ -72,7 +76,7 @@ void Parser::parse_const_def(TokenIter &tk) {
     }
     while ((*tk)->type == LBRACK && tk < tokens.end()) {
         elements.push_back(*tk++);
-        parse_const_expr(tk);
+        parse_expr<ConstExpr>(tk);
         if ((*tk)->type == RBRACK) {
             elements.push_back(*tk++);
         } else {
@@ -84,31 +88,8 @@ void Parser::parse_const_def(TokenIter &tk) {
     } else {
         ERROR(ASSIGN, tk);
     }
-    parse_const_init_val(tk);
+    parse_init_val<ConstExpr, ConstInitVal>(tk);
     elements.push_back(std::make_shared<ConstDef>());
-}
-
-void Parser::parse_const_init_val(TokenIter &tk) {
-    // ConstInitVal -> ConstExp | '{' [ ConstInitVal { ',' ConstInitVal } ] '}'
-    if ((*tk)->type == LBRACE) {
-        elements.push_back(*tk++);
-        while (tk < tokens.end()) {
-            parse_const_init_val(tk);
-            if ((*tk)->type == COMMA) {
-                elements.push_back(*tk++);
-            } else {
-                break;
-            }
-        }
-        if ((*tk)->type == RBRACE) {
-            elements.push_back(*tk++);
-        } else {
-            ERROR(COMMA or RBRACE, tk);
-        }
-    } else {
-        parse_const_expr(tk);
-    }
-    elements.push_back(std::make_shared<ConstInitVal>());
 }
 
 void Parser::parse_var_decl(TokenIter &tk) {
@@ -141,7 +122,7 @@ void Parser::parse_var_def(TokenIter &tk) {
     }
     while ((*tk)->type == LBRACK && tk < tokens.end()) {
         elements.push_back(*tk++);
-        parse_const_expr(tk);
+        parse_expr<ConstExpr>(tk);
         if ((*tk)->type == RBRACK) {
             elements.push_back(*tk++);
         } else {
@@ -150,21 +131,25 @@ void Parser::parse_var_def(TokenIter &tk) {
     }
     if ((*tk)->type == ASSIGN) {
         elements.push_back(*tk++);
-        parse_init_val(tk);
+        parse_init_val<NormalExpr, InitVal>(tk);
     }
     elements.push_back(std::make_shared<VarDef>());
 }
 
+template <typename ExprT, typename ElementT>
 void Parser::parse_init_val(TokenIter &tk) {
     // InitVal -> Exp | '{' [ InitVal { ',' InitVal } ] '}'
+    // ConstInitVal -> ConstExp | '{' [ ConstInitVal { ',' ConstInitVal } ] '}'
     if ((*tk)->type == LBRACE) {
         elements.push_back(*tk++);
-        while (tk < tokens.end()) {
-            parse_init_val(tk);
-            if ((*tk)->type == COMMA) {
-                elements.push_back(*tk++);
-            } else {
-                break;
+        if ((*tk)->type != RBRACE) {
+            while (tk < tokens.end()) {
+                parse_init_val<ExprT, ElementT>(tk);
+                if ((*tk)->type == COMMA) {
+                    elements.push_back(*tk++);
+                } else {
+                    break;
+                }
             }
         }
         if ((*tk)->type == RBRACE) {
@@ -173,9 +158,9 @@ void Parser::parse_init_val(TokenIter &tk) {
             ERROR(COMMA or RBRACE, tk);
         }
     } else {
-        parse_expr(tk);
+        parse_expr<ExprT>(tk);
     }
-    elements.push_back(std::make_shared<InitVar>());
+    elements.push_back(std::make_shared<ElementT>());
 }
 
 void Parser::parse_func_def(TokenIter &tk) {
@@ -229,7 +214,7 @@ void Parser::parse_main_func_def(TokenIter &tk) {
     elements.push_back(std::make_shared<MainFuncDef>());
 }
 
-inline void Parser::parse_func_type(TokenIter &tk) {
+void Parser::parse_func_type(TokenIter &tk) {
     // FuncType -> 'void' | 'int'
     switch ((*tk)->type) {
         case INTTK:
@@ -276,7 +261,7 @@ void Parser::parse_func_formal_param(TokenIter &tk) {
         }
         while ((*tk)->type == LBRACK && tk < tokens.end()) {
             elements.push_back(*tk++);
-            parse_const_expr(tk);
+            parse_expr<ConstExpr>(tk);
             if ((*tk)->type == RBRACK) {
                 elements.push_back(*tk++);
             } else {
@@ -351,13 +336,13 @@ void Parser::parse_stmt(TokenIter &tk) {
                             ERROR(RPARENT, tk);
                         }
                     } else {
-                        parse_expr(tk);  // pre-fetch
+                        parse_expr<NormalExpr>(tk);  // pre-fetch
                     }
                     break;
                 }
             }
             if (no_assign) {
-                parse_expr(tk);  // pre-fetch
+                parse_expr<NormalExpr>(tk);  // pre-fetch
             }
             if ((*tk)->type == SEMICN) {
                 elements.push_back(*tk++);
@@ -388,6 +373,7 @@ void Parser::parse_stmt(TokenIter &tk) {
             parse_stmt(tk);
             if ((*tk)->type == ELSETK) {
                 elements.push_back(*tk++);
+                parse_stmt(tk);
             }
             break;
         case WHILETK:
@@ -417,7 +403,7 @@ void Parser::parse_stmt(TokenIter &tk) {
         case RETURNTK:
             elements.push_back(*tk++);
             if (starts_with_expr(tk)) {
-                parse_expr(tk);
+                parse_expr<NormalExpr>(tk);
             }
             if ((*tk)->type == SEMICN) {
                 elements.push_back(*tk++);
@@ -439,7 +425,7 @@ void Parser::parse_stmt(TokenIter &tk) {
             }
             while ((*tk)->type == COMMA && tk < tokens.end()) {
                 elements.push_back(*tk++);
-                parse_expr(tk);
+                parse_expr<NormalExpr>(tk);
             }
             if ((*tk)->type == RPARENT) {
                 elements.push_back(*tk++);
@@ -453,15 +439,22 @@ void Parser::parse_stmt(TokenIter &tk) {
             }
             break;
         default:
-            parse_expr(tk);  // pre-fetch
+            parse_expr<NormalExpr>(tk);  // pre-fetch
+            if ((*tk)->type == SEMICN) {
+                elements.push_back(*tk++);
+            } else {
+                ERROR(SEMICN, tk);
+            }
     }
     elements.push_back(std::make_shared<Statement>());
 }
 
+template <typename T>
 void Parser::parse_expr(TokenIter &tk) {
     // Exp -> AddExp
+    // ConstExp -> AddExp
     parse_addsub_expr(tk);
-    elements.push_back(std::make_shared<Expression>());
+    elements.push_back(std::make_shared<T>());
 }
 
 void Parser::parse_cond_expr(TokenIter &tk) {
@@ -479,7 +472,7 @@ void Parser::parse_lvalue(TokenIter &tk) {
     }
     while ((*tk)->type == LBRACK && tk < tokens.end()) {
         elements.push_back(*tk++);
-        parse_expr(tk);
+        parse_expr<NormalExpr>(tk);
         if ((*tk)->type == RBRACK) {
             elements.push_back(*tk++);
         } else {
@@ -494,7 +487,7 @@ void Parser::parse_primary_expr(TokenIter &tk) {
     switch ((*tk)->type) {
         case LPARENT:
             elements.push_back(*tk++);
-            parse_expr(tk);
+            parse_expr<NormalExpr>(tk);
             if ((*tk)->type == RPARENT) {
                 elements.push_back(*tk++);
             } else {
@@ -513,7 +506,7 @@ void Parser::parse_primary_expr(TokenIter &tk) {
     elements.push_back(std::make_shared<PrimaryExpr>());
 }
 
-inline void Parser::parse_number(TokenIter &tk) {
+void Parser::parse_number(TokenIter &tk) {
     // Number -> IntConst
     elements.push_back(*tk++);
     elements.push_back(std::make_shared<Number>());
@@ -541,7 +534,7 @@ void Parser::parse_unary_expr(TokenIter &tk) {
         case PLUS:
         case MINU:
         case NOT:
-            elements.push_back(*tk++);
+            parse_unary_op(tk);  // pre-fetch
             parse_unary_expr(tk);
             break;
         default:
@@ -550,10 +543,23 @@ void Parser::parse_unary_expr(TokenIter &tk) {
     elements.push_back(std::make_shared<UnaryExpr>());
 }
 
+void Parser::parse_unary_op(TokenIter &tk) {
+    switch ((*tk)->type) {
+        case PLUS:
+        case MINU:
+        case NOT:
+            elements.push_back(*tk++);
+            break;
+        default:
+            ERROR(PLUS or MINU or NOT, tk);
+    }
+    elements.push_back(std::make_shared<UnaryOp>());
+}
+
 void Parser::parse_func_real_params(TokenIter &tk) {
     // FuncRParams -> Exp { ',' Exp }
     while (tk < tokens.end()) {
-        parse_expr(tk);
+        parse_expr<NormalExpr>(tk);
         if ((*tk)->type == COMMA) {
             elements.push_back(*tk++);
         } else {
@@ -569,11 +575,9 @@ void Parser::_parse_expr(TokenIter &tk,
                          const std::function<bool(TokenCode)> &predicate) {
     while (tk < tokens.end()) {
         (this->*parse_first)(tk);
-        auto next = (*tk)->type;
-        if (predicate(next)) {
-            elements.pop_back();
+        if (predicate((*tk)->type)) {
             elements.push_back(std::make_shared<T>());
-            tk++;
+            elements.push_back(*tk++);
         } else {
             break;
         }
@@ -623,10 +627,4 @@ void Parser::parse_logical_or_expr(TokenIter &tk) {
     // LOrExp -> LAndExp { '||' LAndExp }
     _parse_expr<LogicalOrExpr>(tk, &Parser::parse_logical_and_expr,
                                [](TokenCode next) { return next == OR; });
-}
-
-void Parser::parse_const_expr(TokenIter &tk) {
-    // ConstExp -> AddExp
-    parse_addsub_expr(tk);
-    elements.push_back(std::make_shared<ConstExpr>());
 }

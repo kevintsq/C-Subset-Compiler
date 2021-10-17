@@ -79,12 +79,11 @@ public:
 
     void parse_const_def(TokenIter &tk);
 
-    void parse_const_init_val(TokenIter &tk);
-
     void parse_var_decl(TokenIter &tk);
 
     void parse_var_def(TokenIter &tk);
 
+    template <typename ExprT, typename ElementT>
     void parse_init_val(TokenIter &tk);
 
     void parse_func_def(TokenIter &tk);
@@ -103,6 +102,7 @@ public:
 
     void parse_stmt(TokenIter &tk);
 
+    template <typename T>
     void parse_expr(TokenIter &tk);
 
     void parse_cond_expr(TokenIter &tk);
@@ -112,6 +112,8 @@ public:
     void parse_primary_expr(TokenIter &tk);
 
     void parse_number(TokenIter &tk);
+
+    void parse_unary_op(TokenIter &tk);
 
     void parse_unary_expr(TokenIter &tk);
 
@@ -128,8 +130,6 @@ public:
     void parse_logical_and_expr(TokenIter &tk);
 
     void parse_logical_or_expr(TokenIter &tk);
-
-    void parse_const_expr(TokenIter &tk);
 };
 
 

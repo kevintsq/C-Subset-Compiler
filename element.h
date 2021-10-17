@@ -62,10 +62,10 @@ public:
     }
 };
 
-class InitVar : public Element {
+class InitVal : public Element {
 public:
-    explicit InitVar() {
-        this->name = "<InitVar>";
+    explicit InitVal() {
+        this->name = "<InitVal>";
     }
 };
 
@@ -125,9 +125,9 @@ public:
     }
 };
 
-class Expression : public Element {
+class NormalExpr : public Element {
 public:
-    explicit Expression() {
+    explicit NormalExpr() {
         this->name = "<Exp>";
     }
 };
@@ -164,6 +164,13 @@ class UnaryExpr : public Element {
 public:
     explicit UnaryExpr() {
         this->name = "<UnaryExp>";
+    }
+};
+
+class UnaryOp : public Element {
+public:
+    explicit UnaryOp() {
+        this->name = "<UnaryOp>";
     }
 };
 
