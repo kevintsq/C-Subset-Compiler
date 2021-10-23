@@ -5,20 +5,40 @@
 #ifndef CODE_ELEMENT_H
 #define CODE_ELEMENT_H
 
-
 #include <iostream>
+#include <fstream>
 #include <memory>
+#include <vector>
+#include <unordered_map>
+#include <functional>
+
+using std::cout;
+using std::cerr;
+using std::endl;
+using std::ostream;
+using std::ifstream;
+using std::ofstream;
+using std::string;
+using std::shared_ptr;
+using std::make_shared;
+using std::dynamic_pointer_cast;
+using std::vector;
+using std::unordered_map;
+using std::function;
 
 class Element {
 public:
-    std::string name;
+    string name;
 
-    virtual void print() {
-        std::cout << name << std::endl;
+    friend std::ostream &operator<<(std::ostream &out, const Element &self) {
+        out << self.name << endl;
+        return out;
     }
+
+    virtual ~Element() = default;
 };
 
-using ElementP = std::shared_ptr<Element>;
+using ElementP = shared_ptr<Element>;
 
 class CompUnit : public Element {
 public:

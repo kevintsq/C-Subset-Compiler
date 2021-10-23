@@ -5,18 +5,15 @@
 #ifndef CODE_TOKENIZER_H
 #define CODE_TOKENIZER_H
 
-
-#include <fstream>
-#include <vector>
 #include <cctype>
 #include "token.h"
 
-
 class Tokenizer {
 public:
-    std::vector<TokenP> tokens;
+    vector<TokenP> tokens;
+    Error &error;
 
-    explicit Tokenizer(const char *filename);
+    explicit Tokenizer(const char *filename, Error &error);
 
     static inline bool isalnum_(char c) {
         return isalnum(c) || c == '_';
@@ -31,21 +28,22 @@ public:
         }
     }
 
-    template <typename KeywordTokenClass>
+    template<typename KeywordTokenClass>
     static inline TokenP get_ident_or_keyword(char **buffer, const char *current, int line) {
-        if (Tokenizer::isalnum_(*(*buffer)++)) {
-            while (Tokenizer::isalnum_(*(*buffer)++));
-            return std::make_shared<Identifier>(line, current, --(*buffer) - current);
+        if (isalnum_(*(*buffer)++)) {
+            while (isalnum_(*(*buffer)++));
+            return make_shared<Identifier>(line, current, --(*buffer) - current);
         } else {
             (*buffer)--;
-            return std::make_shared<KeywordTokenClass>(line);
+            return make_shared<KeywordTokenClass>(line);
         }
     }
 
-    void print() {
-        for (const auto& token: this->tokens) {
-            token->print();
+    friend ostream &operator<<(ostream &out, const Tokenizer &self) {
+        for (const auto &token: self.tokens) {
+            out << *token;
         }
+        return out;
     }
 };
 

@@ -2,12 +2,12 @@
 #include "parser.h"
 
 int main() {
-    if (freopen("output.txt", "w", stdout) == nullptr) {
-        perror("freopen");
-        return EXIT_FAILURE;
-    }
-    Tokenizer tokenizer("testfile.txt");
-    Parser parser(tokenizer.tokens);
-    parser.print();
+    Error error;
+    Tokenizer tokenizer("testfile.txt", error);
+    Parser parser(tokenizer.tokens, error);
+    ofstream output("output.txt");
+    output << parser;
+    ofstream error_stream("error.txt");
+    error_stream << error;
     return EXIT_SUCCESS;
 }
