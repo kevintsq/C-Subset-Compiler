@@ -8,9 +8,13 @@
 #include <iostream>
 #include <fstream>
 #include <memory>
+#include <utility>
 #include <vector>
 #include <unordered_map>
 #include <functional>
+#include <cassert>
+
+#define cast dynamic_pointer_cast
 
 using std::cout;
 using std::cerr;
@@ -25,13 +29,18 @@ using std::dynamic_pointer_cast;
 using std::vector;
 using std::unordered_map;
 using std::function;
+using std::move;
 
 class Element {
 public:
-    string name;
+    string fullname;
 
-    friend std::ostream &operator<<(std::ostream &out, const Element &self) {
-        out << self.name << endl;
+    Element() = default;
+
+    explicit Element(string &&name) : fullname(move(name)) {}
+
+    friend ostream &operator<<(ostream &out, const Element &self) {
+        out << self.fullname;
         return out;
     }
 
@@ -42,212 +51,152 @@ using ElementP = shared_ptr<Element>;
 
 class CompUnit : public Element {
 public:
-    explicit CompUnit() {
-        this->name = "<CompUnit>";
-    }
+    explicit CompUnit() : Element("<CompUnit>") {}
 };
 
 class ConstDecl : public Element {
 public:
-    explicit ConstDecl() {
-        this->name = "<ConstDecl>";
-    }
+    explicit ConstDecl() : Element("<ConstDecl>") {}
 };
 
 class ConstDef : public Element {
 public:
-    explicit ConstDef() {
-        this->name = "<ConstDef>";
-    }
+    explicit ConstDef() : Element("<ConstDef>") {}
 };
 
 class ConstInitVal : public Element {
 public:
-    explicit ConstInitVal() {
-        this->name = "<ConstInitVal>";
-    }
+    explicit ConstInitVal() : Element("<ConstInitVal>") {}
 };
 
 class VarDecl : public Element {
 public:
-    explicit VarDecl() {
-        this->name = "<VarDecl>";
-    }
+    explicit VarDecl() : Element("<VarDecl>") {}
 };
 
 class VarDef : public Element {
 public:
-    explicit VarDef() {
-        this->name = "<VarDef>";
-    }
+    explicit VarDef() : Element("<VarDef>") {}
 };
 
 class InitVal : public Element {
 public:
-    explicit InitVal() {
-        this->name = "<InitVal>";
-    }
+    explicit InitVal() : Element("<InitVal>") {}
 };
 
 class FuncDef : public Element {
 public:
-    explicit FuncDef() {
-        this->name = "<FuncDef>";
-    }
+    explicit FuncDef() : Element("<FuncDef>") {}
 };
 
 class MainFuncDef : public Element {
 public:
-    explicit MainFuncDef() {
-        this->name = "<MainFuncDef>";
-    }
+    explicit MainFuncDef() : Element("<MainFuncDef>") {}
 };
 
 class FuncType : public Element {
 public:
-    explicit FuncType() {
-        this->name = "<FuncType>";
-    }
+    explicit FuncType() : Element("<FuncType>") {}
 };
 
 class FuncFormalParams : public Element {
 public:
-    explicit FuncFormalParams() {
-        this->name = "<FuncFParams>";
-    }
+    explicit FuncFormalParams() : Element("<FuncFParams>") {}
 };
 
 class FuncFormalParam : public Element {
 public:
-    explicit FuncFormalParam() {
-        this->name = "<FuncFParam>";
-    }
+    explicit FuncFormalParam() : Element("<FuncFParam>") {}
 };
 
 class Block : public Element {
 public:
-    explicit Block() {
-        this->name = "<Block>";
-    }
+    explicit Block() : Element("<Block>") {}
 };
 
 class BlockItem : public Element {
 public:
-    explicit BlockItem() {
-        this->name = "<BlockItem>";
-    }
+    explicit BlockItem() : Element("<BlockItem>") {}
 };
 
 class Statement : public Element {
 public:
-    explicit Statement() {
-        this->name = "<Stmt>";
-    }
+    explicit Statement() : Element("<Stmt>") {}
 };
 
 class NormalExpr : public Element {
 public:
-    explicit NormalExpr() {
-        this->name = "<Exp>";
-    }
+    explicit NormalExpr() : Element("<Exp>") {}
 };
 
 class ConditionExpr : public Element {
 public:
-    explicit ConditionExpr() {
-        this->name = "<Cond>";
-    }
+    explicit ConditionExpr() : Element("<Cond>") {}
 };
 
 class LValue : public Element {
 public:
-    explicit LValue() {
-        this->name = "<LVal>";
-    }
+    explicit LValue() : Element("<LVal>") {}
 };
 
 class PrimaryExpr : public Element {
 public:
-    explicit PrimaryExpr() {
-        this->name = "<PrimaryExp>";
-    }
+    explicit PrimaryExpr() : Element("<PrimaryExp>") {}
 };
 
 class Number : public Element {
 public:
-    explicit Number() {
-        this->name = "<Number>";
-    }
+    explicit Number() : Element("<Number>") {}
 };
 
 class UnaryExpr : public Element {
 public:
-    explicit UnaryExpr() {
-        this->name = "<UnaryExp>";
-    }
+    explicit UnaryExpr() : Element("<UnaryExp>") {}
 };
 
 class UnaryOp : public Element {
 public:
-    explicit UnaryOp() {
-        this->name = "<UnaryOp>";
-    }
+    explicit UnaryOp() : Element("<UnaryOp>") {}
 };
 
 class FuncRealParams : public Element {
 public:
-    explicit FuncRealParams() {
-        this->name = "<FuncRParams>";
-    }
+    explicit FuncRealParams() : Element("<FuncRParams>") {}
 };
 
 class MulDivExpr : public Element {
 public:
-    explicit MulDivExpr() {
-        this->name = "<MulExp>";
-    }
+    explicit MulDivExpr() : Element("<MulExp>") {}
 };
 
 class AddSubExpr : public Element {
 public:
-    explicit AddSubExpr() {
-        this->name = "<AddExp>";
-    }
+    explicit AddSubExpr() : Element("<AddExp>") {}
 };
 
 class RelationalExpr : public Element {
 public:
-    explicit RelationalExpr() {
-        this->name = "<RelExp>";
-    }
+    explicit RelationalExpr() : Element("<RelExp>") {}
 };
 
 class EqualExpr : public Element {
 public:
-    explicit EqualExpr() {
-        this->name = "<EqExp>";
-    }
+    explicit EqualExpr() : Element("<EqExp>") {}
 };
 
 class LogicalAndExpr : public Element {
 public:
-    explicit LogicalAndExpr() {
-        this->name = "<LAndExp>";
-    }
+    explicit LogicalAndExpr() : Element("<LAndExp>") {}
 };
 
 class LogicalOrExpr : public Element {
 public:
-    explicit LogicalOrExpr() {
-        this->name = "<LOrExp>";
-    }
+    explicit LogicalOrExpr() : Element("<LOrExp>") {}
 };
 
 class ConstExpr : public Element {
 public:
-    explicit ConstExpr() {
-        this->name = "<ConstExp>";
-    }
+    explicit ConstExpr() : Element("<ConstExp>") {}
 };
 
 #endif //CODE_ELEMENT_H

@@ -1,0 +1,53 @@
+//
+// Created by Kevin Tan on 2021/11/18.
+//
+
+#ifndef CODE_OPCODE_H
+#define CODE_OPCODE_H
+
+enum OpCode {
+    LOAD_OBJECT,
+    LOAD_INT_LITERAL,
+    LOAD_FORMAT_STRING,
+    STORE_OBJECT,
+    POP_TOP,
+    BUILD_ARRAY,
+
+    PRINTF,
+    GETINT,
+
+    JUMP_ABSOLUTE,
+    // JUMP_FORWARD,
+    JUMP_IF_FALSE_OR_POP,
+    JUMP_IF_TRUE_OR_POP,
+    CALL_FUNCTION,
+    RETURN_VALUE,
+
+    UNARY_OP,
+    BINARY_OP,
+
+    NOP
+};
+
+enum UnaryOpCode {
+    UNARY_POSITIVE,
+    UNARY_NEGATIVE,
+    UNARY_NOT
+};
+
+enum BinaryOpCode {
+    BINARY_ADD,
+    BINARY_SUB,
+    BINARY_MUL,
+    BINARY_DIV,
+    BINARY_MOD,
+    BINARY_EQ,
+    BINARY_LT,
+    BINARY_LE,
+    BINARY_GT,
+    BINARY_GE,
+    BINARY_LOGICAL_AND,
+    BINARY_LOGICAL_OR
+};
+
+#endif //CODE_OPCODE_H

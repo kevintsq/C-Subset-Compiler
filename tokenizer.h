@@ -11,7 +11,6 @@
 class Tokenizer {
 public:
     vector<TokenP> tokens;
-    Error &error;
 
     explicit Tokenizer(const char *filename, Error &error);
 
@@ -41,7 +40,7 @@ public:
 
     friend ostream &operator<<(ostream &out, const Tokenizer &self) {
         for (const auto &token: self.tokens) {
-            out << *token;
+            out << *token << endl;
         }
         return out;
     }

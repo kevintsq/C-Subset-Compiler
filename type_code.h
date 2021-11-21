@@ -6,9 +6,12 @@
 #define CODE_TYPE_CODE_H
 
 enum TypeCode {
-    INT,
     VOID,
-    ARRAY
+    INT,
+    INT_ARRAY,
+    CHAR,
+    CHAR_ARRAY,
+    FUNCTION
 };
 
 #endif //CODE_TYPE_CODE_H

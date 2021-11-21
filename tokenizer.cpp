@@ -4,7 +4,7 @@
 
 #include "tokenizer.h"
 
-Tokenizer::Tokenizer(const char *filename, Error &error) : error(error) {
+Tokenizer::Tokenizer(const char *filename, Error &error) {
 //    FILE *fp = fopen("testfile.txt", "rb");
 //    fseek(fp, 0, SEEK_END);
 //    long size = ftell(fp);
@@ -40,7 +40,7 @@ Tokenizer::Tokenizer(const char *filename, Error &error) : error(error) {
             buffer++;
         } else if ((number = strtol(current, &buffer, 10)) || current != buffer) {
             // Must be after the leading 3!
-            this->tokens.push_back(make_shared<IntConst>(line, number));
+            this->tokens.push_back(make_shared<IntLiteral>(line, number));
         } else if (*buffer == '"') {
             int cnt = 0;
             bool is_valid = true;

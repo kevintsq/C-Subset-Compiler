@@ -6,17 +6,20 @@
 #define CODE_PARSER_H
 
 #include "token.h"
+#include "instruction.h"
 
 using TokenIter = vector<TokenP>::iterator;
-using HashMap = unordered_map<string, IdentP>;
+using HashMap = unordered_map<string, ObjectP>;
 using HashMapP = shared_ptr<HashMap>;
 
 class Parser {
 public:
-    vector<TokenP> &tokens;
     Error &error;
+    vector<TokenP> &tokens;
     vector<ElementP> elements;
     vector<HashMapP> sym_table;
+    vector<InstructionP> instructions;
+
     int while_cnt = 0;
     TypeCode current_func_return_type = INT;
     bool is_return_at_end = false;
@@ -25,9 +28,13 @@ public:
 
     friend ostream &operator<<(ostream &out, const Parser &self) {
         for (const auto &element: self.elements) {
-            out << *element;
+            out << *element << endl;
         }
         return out;
+    }
+
+    inline bool has_type(const TokenIter &tk, TokenCode type) {
+        return tk < tokens.end() && (*tk)->type == type;
     }
 
     static inline bool starts_with_decl(const TokenIter &tk) {
@@ -71,15 +78,15 @@ public:
     }
 
     template<typename T>
-    ElementP _parse_expr(TokenIter &tk, InstanceP *out_instance,
-                         ElementP (Parser::*parse_first)(TokenIter &, InstanceP *),
-                         const function<bool(TokenCode)> &predicate);
+    ObjectP _parse_expr(TokenIter &tk,
+                        ObjectP (Parser::*parse_first)(TokenIter &),
+                        const function<bool(TokenCode)> &predicate);
 
     void parse_comp_unit(TokenIter &tk);
 
-    IdentP check_ident_valid_use(TokenIter &tk, bool is_assigned);
+    ObjectP check_ident_valid_use(TokenIter &tk, bool is_called, bool is_assigned);
 
-    IdentP check_ident_valid_decl(TokenIter &tk, TypeCode type, int nest_level, bool is_const, bool is_func);
+    ObjectP check_ident_valid_decl(TokenIter &tk, TypeCode type, bool is_const, bool is_func);
 
     void parse_decl(TokenIter &tk, int nest_level);
 
@@ -100,9 +107,9 @@ public:
 
     TypeCode parse_func_type(TokenIter &tk);
 
-    void parse_func_formal_params(TokenIter &tk, IdentP &func);
+    void parse_func_formal_params(TokenIter &tk, FuncObjectP &func);
 
-    void parse_func_formal_param(TokenIter &tk, IdentP &func);
+    void parse_func_formal_param(TokenIter &tk, FuncObjectP &func);
 
     void parse_block(TokenIter &tk, int nest_level, bool from_func_def = false);
 
@@ -111,33 +118,33 @@ public:
     void parse_stmt(TokenIter &tk, int nest_level);
 
     template<typename T>
-    ElementP parse_expr(TokenIter &tk, InstanceP *out_instance = nullptr);
+    ObjectP parse_expr(TokenIter &tk);
 
-    ElementP parse_cond_expr(TokenIter &tk, InstanceP *out_instance = nullptr);
+    ObjectP parse_cond_expr(TokenIter &tk);
 
-    IdentP parse_lvalue(TokenIter &tk, bool is_assigned);
+    ObjectP parse_lvalue(TokenIter &tk, bool is_assigned);
 
-    ElementP parse_primary_expr(TokenIter &tk, InstanceP *out_instance);
+    ObjectP parse_primary_expr(TokenIter &tk);
 
-    InstanceP parse_number(TokenIter &tk);
+    ObjectP parse_number(TokenIter &tk);
 
     TokenCode parse_unary_op(TokenIter &tk);
 
-    ElementP parse_unary_expr(TokenIter &tk, InstanceP *out_instance);
+    ObjectP parse_unary_expr(TokenIter &tk);
 
-    void parse_func_real_params(TokenIter &tk, IdentP &func, int func_line, bool report_error);
+    void parse_func_real_params(TokenIter &tk, FuncObjectP &func, int func_line);
 
-    ElementP parse_muldiv_expr(TokenIter &tk, InstanceP *out_instance);
+    ObjectP parse_muldiv_expr(TokenIter &tk);
 
-    ElementP parse_addsub_expr(TokenIter &tk, InstanceP *out_instance);
+    ObjectP parse_addsub_expr(TokenIter &tk);
 
-    ElementP parse_rel_expr(TokenIter &tk, InstanceP *out_instance);
+    ObjectP parse_rel_expr(TokenIter &tk);
 
-    ElementP parse_eq_expr(TokenIter &tk, InstanceP *out_instance);
+    ObjectP parse_eq_expr(TokenIter &tk);
 
-    ElementP parse_logical_and_expr(TokenIter &tk, InstanceP *out_instance);
+    ObjectP parse_logical_and_expr(TokenIter &tk);
 
-    ElementP parse_logical_or_expr(TokenIter &tk, InstanceP *out_instance);
+    ObjectP parse_logical_or_expr(TokenIter &tk);
 };
 
 
