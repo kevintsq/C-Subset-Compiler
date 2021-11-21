@@ -17,6 +17,15 @@ StackMachine::StackMachine(vector<InstructionP> &instructions) : instructions(in
             case POP_TOP:
                 stack.pop_back();
                 break;
+            case BUILD_ARRAY: {
+                ArrayObjectP array = make_shared<ArrayObject>();
+                for (auto &o : stack) {
+                    array->value.push_back(o);
+                }
+                stack.clear();  // FIXME: check
+                stack.push_back(array);
+                break;
+            }
             case GETINT: {
                 int n;
                 cin >> n;

@@ -63,7 +63,7 @@ class FuncObject : public Object {
 public:
     TypeCode return_type;
     vector<ObjectP> params;
-    int code_offset = 0;
+    unsigned long long code_offset = 0;
 
     explicit FuncObject(TypeCode return_type) : Object(FUNCTION), return_type(return_type) {}
 };

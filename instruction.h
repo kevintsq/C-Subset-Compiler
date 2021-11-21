@@ -40,8 +40,8 @@ public:
                     name << '\t' << o->ident_info->name << "\t(int declared in line " << o->ident_info->line << " at "
                          << o << ')';
                 }
-            }
                 break;
+            }
             case CHAR_ARRAY:
                 name << '\t' << dynamic_pointer_cast<StringObject>(object)->value;
                 break;
@@ -49,6 +49,11 @@ public:
                 break;
         }
     }
+};
+
+class BuildArray : public Instruction {
+public:
+    explicit BuildArray() : Instruction(NAME(BUILD_ARRAY)) {}
 };
 
 class StoreObject : public Instruction {

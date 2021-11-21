@@ -135,6 +135,7 @@ void Parser::parse_const_def(TokenIter &tk, int nest_level) {
     }
     parse_init_val<ConstExpr, ConstInitVal>(tk);
     elements.push_back(make_shared<ConstDef>());
+    // instructions.push_back(make_shared<StoreObject>(current));
 }
 
 void Parser::parse_var_decl(TokenIter &tk, int nest_level) {
@@ -185,6 +186,7 @@ void Parser::parse_var_def(TokenIter &tk, int nest_level) {
     if ((*tk)->type == ASSIGN) {
         elements.push_back(*tk++);
         parse_init_val<NormalExpr, InitVal>(tk);
+        // instructions.push_back(make_shared<StoreObject>(current));
     }
     elements.push_back(make_shared<VarDef>());
 }
@@ -200,6 +202,8 @@ void Parser::parse_init_val(TokenIter &tk) {
                 parse_init_val<ExprT, ElementT>(tk);
                 if ((*tk)->type == COMMA) {
                     elements.push_back(*tk++);
+                    // // instructions.push_back(make_shared<BuildArray>());
+                    // nested array is flattened
                 } else {
                     break;
                 }
@@ -207,6 +211,7 @@ void Parser::parse_init_val(TokenIter &tk) {
         }
         if ((*tk)->type == RBRACE) {
             elements.push_back(*tk++);
+            // instructions.push_back(make_shared<BuildArray>());
         } else {
             ERROR(COMMA or RBRACE, tk);
         }
@@ -222,6 +227,7 @@ void Parser::parse_func_def(TokenIter &tk) {
     FuncObjectP current;
     if ((*tk)->type == IDENFR) {
         current = cast<FuncObject>(check_ident_valid_decl(tk, current_func_return_type, false, true));
+        current->code_offset = instructions.size();
     } else {
         ERROR(IDENFR, tk);
     }
@@ -518,11 +524,10 @@ void Parser::parse_stmt(TokenIter &tk, int nest_level) {
             } else {
                 ERROR(STRCON, tk);
             }
-            int cnt = 0;
-            while (has_type(tk, COMMA)) {
+            int cnt;
+            for (cnt = 0; has_type(tk, COMMA); cnt++) {
                 elements.push_back(*tk++);
                 parse_expr<NormalExpr>(tk);
-                cnt++;
             }
             if (cnt != fmt_char_cnt) {
                 error(FORMAT_STRING_ARGUMENT_MISMATCH, p->line);
@@ -591,7 +596,7 @@ ObjectP Parser::parse_lvalue(TokenIter &tk, bool is_assigned = false) {
     ObjectP result;
     if ((*tk)->type == IDENFR) {
         result = check_ident_valid_use(tk, false, is_assigned);
-        instructions.push_back(make_shared<LoadObject>(result));
+        // instructions.push_back(make_shared<LoadObject>(result));
     } else {
         ERROR(IDENFR, tk);
     }
@@ -667,7 +672,7 @@ ObjectP Parser::parse_unary_expr(TokenIter &tk) {
                     error(MISSING_RPAREN, (*(tk - 1))->line);
                 }
                 if (func != nullptr) {
-                    instructions.push_back(make_shared<CallFunction>(func));
+                    // instructions.push_back(make_shared<CallFunction>(func));
                     switch (func->return_type) {
                         case VOID:
                             result = make_shared<Object>();
