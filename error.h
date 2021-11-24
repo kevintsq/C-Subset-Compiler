@@ -8,6 +8,11 @@
 #include <iostream>
 #include <queue>
 
+#define ERROR_EXPECTED_GOT(expected, got) do { cerr << "In " << __func__ << " line " << __LINE__ << " source code line " << (*(got))->line << ", expected "#expected", got " << **(got) << endl; exit(-1); } while (0)
+#define ERROR_NOT_SUPPORTED(got) do { cerr << "In " << __func__ << " line " << __LINE__ << ", "#got" is not supported." << endl; exit(-1); } while (0)
+#define ERROR_LIMITED_SUPPORT_WITH_LINE(line, support) do { cerr << "In " << __func__ << " line " << __LINE__ << " source code line " << (line) << ", only supports "#support << endl; exit(-1); } while (0)
+#define ERROR_LIMITED_SUPPORT(support) do { cerr << "In " << __func__ << " line " << __LINE__ << ", only supports "#support << endl; exit(-1); } while (0)
+
 using namespace std;
 
 enum ErrorCode {
@@ -27,12 +32,13 @@ enum ErrorCode {
 };
 
 using Pair = pair<int, char>;
-auto cmp = [](Pair &a, Pair &b) -> bool {
-    return a.first == b.first ? a.second > b.second : a.first > b.first;
-};
-using heapq = priority_queue<Pair, vector<Pair>, decltype(cmp)>;
+using heapq = priority_queue<Pair, vector<Pair>, bool (*)(Pair &, Pair &)>;
 
 class Error {
+    static bool cmp(Pair &a, Pair &b) {
+        return a.first == b.first ? a.second > b.second : a.first > b.first;
+    }
+
 public:
     heapq errors = heapq(cmp);
 

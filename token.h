@@ -7,8 +7,10 @@
 
 #include <cstring>
 #include <string>
+#include <regex>
+#include <utility>
 #include "object.h"
-
+#include "util.h"
 #include "error.h"
 
 #define NAME(name) name, #name
@@ -29,13 +31,17 @@ class Identifier : public Token {
 public:
     string name;
 
+    Identifier(int line, const string &name) : Token(line, IDENFR), name(name) {
+        this->fullname = "IDENFR " + name;
+    }
+
     Identifier(int line, const char *start, long long length) : Token(line, IDENFR) {
         this->name.assign(start, length);
         this->fullname = "IDENFR " + name;
     }
 };
 
-class IntLiteral : public Token, public IntObject {  // it's an r-value
+class IntLiteral : public Token, public IntObject {  // it's an r-data
 public:
     IntLiteral(int line, int value) : Token(line, INTCON), IntObject(value) {
         this->fullname = "INTCON " + std::to_string(value);
@@ -45,21 +51,24 @@ public:
 
 using IntLiteralP = shared_ptr<IntLiteral>;
 
-class FormatString : public Token, public StringObject {  // it's an r-value
+class FormatString : public Token, public StringObject {  // it's an r-data
 public:
     int fmt_char_cnt = 0;
+    vector<string> segments;
 
-    FormatString(int line, const char *start, long long length, int fmt_char_cnt) :
-            Token(line, STRCON), StringObject(start, length), fmt_char_cnt(fmt_char_cnt) {
+    FormatString(int line, const char *start, long long length, int fmt_char_cnt, vector<string> segments) :
+            Token(line, STRCON), StringObject(start, length), fmt_char_cnt(fmt_char_cnt), segments(move(segments)) {
         this->fullname = "STRCON " + this->value;
     }
 };
 
 using FormatStringP = shared_ptr<FormatString>;
 
-class MainToken : public Token {
+class MainToken : public Token, public FuncObject {
 public:
-    explicit MainToken(int line) : Token(line, NAME(MAINTK)" main") {}
+    explicit MainToken(int line) : Token(line, NAME(MAINTK)" main"), FuncObject(INT) {
+        this->ident_info = make_shared<Identifier>(line, "main");
+    }
 };
 
 class ConstToken : public Token {

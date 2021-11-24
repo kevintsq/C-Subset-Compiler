@@ -19,10 +19,11 @@ public:
     vector<ElementP> elements;
     vector<HashMapP> sym_table;
     vector<InstructionP> instructions;
+    InstructionP entry_inst;
 
     int while_cnt = 0;
     TypeCode current_func_return_type = INT;
-    bool is_return_at_end = false;
+    bool has_return_at_end = false;
 
     explicit Parser(vector<TokenP> &tokens, Error &error);
 
@@ -77,10 +78,68 @@ public:
         }
     }
 
+    static BinaryOpCode determine_addsub(TokenCode type) {
+        switch (type) {
+            case PLUS:
+                return BINARY_ADD;
+            case MINU:
+                return BINARY_SUB;
+            default:
+                return NOTHING;
+        }
+    }
+
+    static BinaryOpCode determine_muldiv(TokenCode type) {
+        switch (type) {
+            case MULT:
+                return BINARY_MUL;
+            case DIV:
+                return BINARY_DIV;
+            case MOD:
+                return BINARY_MOD;
+            default:
+                return NOTHING;
+        }
+    }
+
+    static BinaryOpCode determine_relation(TokenCode type) {
+        switch (type) {
+            case LSS:
+                return BINARY_LT;
+            case LEQ:
+                return BINARY_LE;
+            case GRE:
+                return BINARY_GT;
+            case GEQ:
+                return BINARY_GE;
+            default:
+                return NOTHING;
+        }
+    }
+
+    static BinaryOpCode determine_equality(TokenCode type) {
+        switch (type) {
+            case EQL:
+                return BINARY_EQ;
+            case NEQ:
+                return BINARY_NE;
+            default:
+                return NOTHING;
+        }
+    }
+
+    static BinaryOpCode determine_or(TokenCode type) {
+        return type == OR ? BINARY_LOGICAL_OR : NOTHING;
+    }
+
+    static BinaryOpCode determine_and(TokenCode type) {
+        return type == AND ? BINARY_LOGICAL_AND : NOTHING;
+    }
+
     template<typename T>
-    ObjectP _parse_expr(TokenIter &tk,
-                        ObjectP (Parser::*parse_first)(TokenIter &),
-                        const function<bool(TokenCode)> &predicate);
+    ObjectP _parse_expr(TokenIter &tk, bool generate_inst, BinaryOpCode last_op,
+                        ObjectP (Parser::*parse_first)(TokenIter &, bool, BinaryOpCode),
+                        BinaryOpCode (*predicate)(TokenCode));
 
     void parse_comp_unit(TokenIter &tk);
 
@@ -99,7 +158,7 @@ public:
     void parse_var_def(TokenIter &tk, int nest_level);
 
     template<typename ExprT, typename ElementT>
-    void parse_init_val(TokenIter &tk);
+    ObjectP parse_init_val(TokenIter &tk, bool generate_inst = true);
 
     void parse_func_def(TokenIter &tk);
 
@@ -118,33 +177,33 @@ public:
     void parse_stmt(TokenIter &tk, int nest_level);
 
     template<typename T>
-    ObjectP parse_expr(TokenIter &tk);
+    ObjectP parse_expr(TokenIter &tk, bool generate_inst = true);
 
     ObjectP parse_cond_expr(TokenIter &tk);
 
-    ObjectP parse_lvalue(TokenIter &tk, bool is_assigned);
+    ObjectP parse_lvalue(TokenIter &tk, bool generate_inst, bool is_assigned);
 
-    ObjectP parse_primary_expr(TokenIter &tk);
+    ObjectP parse_primary_expr(TokenIter &tk, bool generate_inst);
 
-    ObjectP parse_number(TokenIter &tk);
+    IntObjectP parse_number(TokenIter &tk);
 
-    TokenCode parse_unary_op(TokenIter &tk);
+    UnaryOpCode parse_unary_op(TokenIter &tk);
 
-    ObjectP parse_unary_expr(TokenIter &tk);
+    ObjectP parse_unary_expr(TokenIter &tk, bool generate_inst, BinaryOpCode dummy);
 
     void parse_func_real_params(TokenIter &tk, FuncObjectP &func, int func_line);
 
-    ObjectP parse_muldiv_expr(TokenIter &tk);
+    ObjectP parse_muldiv_expr(TokenIter &tk, bool generate_inst, BinaryOpCode last_op);
 
-    ObjectP parse_addsub_expr(TokenIter &tk);
+    ObjectP parse_addsub_expr(TokenIter &tk, bool generate_inst, BinaryOpCode last_op);
 
-    ObjectP parse_rel_expr(TokenIter &tk);
+    ObjectP parse_rel_expr(TokenIter &tk, bool generate_inst, BinaryOpCode last_op);
 
-    ObjectP parse_eq_expr(TokenIter &tk);
+    ObjectP parse_eq_expr(TokenIter &tk, bool generate_inst, BinaryOpCode last_op);
 
-    ObjectP parse_logical_and_expr(TokenIter &tk);
+    ObjectP parse_logical_and_expr(TokenIter &tk, bool generate_inst, BinaryOpCode last_op);
 
-    ObjectP parse_logical_or_expr(TokenIter &tk);
+    ObjectP parse_logical_or_expr(TokenIter &tk, bool generate_inst, BinaryOpCode last_op);
 };
 
 

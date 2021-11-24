@@ -43,6 +43,8 @@ Tokenizer::Tokenizer(const char *filename, Error &error) {
             this->tokens.push_back(make_shared<IntLiteral>(line, number));
         } else if (*buffer == '"') {
             int cnt = 0;
+            string s;
+            vector<string> segments;
             bool is_valid = true;
             while (*++buffer != '"') {
                 if (*buffer == '\0' || !(*buffer == ' ' || *buffer == '!' ||
@@ -54,9 +56,20 @@ Tokenizer::Tokenizer(const char *filename, Error &error) {
                     }
                     is_valid = false;
                 }
-                if (*buffer == '%' && *(buffer + 1) == 'd') { cnt++; }
+                if (*buffer == '%' && *(buffer + 1) == 'd') {
+                    segments.push_back(s);
+                    s.clear();
+                    cnt++;
+                    buffer++;
+                } else if (*buffer == '\\' && *(buffer + 1) == 'n') {
+                    s += '\n';
+                    buffer++;
+                } else {
+                    s += *buffer;
+                }
             }
-            this->tokens.push_back(make_shared<FormatString>(line, current, ++buffer - current, cnt));
+            segments.push_back(s);
+            this->tokens.push_back(make_shared<FormatString>(line, current, ++buffer - current, cnt, segments));
         } else if (startswith(&buffer, "//")) {
             while (*buffer++ != '\n') {
                 if (*buffer == '\0') { return; }

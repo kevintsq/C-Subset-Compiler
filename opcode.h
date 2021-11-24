@@ -7,16 +7,16 @@
 
 enum OpCode {
     LOAD_OBJECT,
-    LOAD_INT_LITERAL,
-    LOAD_FORMAT_STRING,
     STORE_OBJECT,
-    POP_TOP,
     BUILD_ARRAY,
+    INIT_ARRAY,
+    SUBSCR_ARRAY,
+    STORE_SUBSCR,
 
-    PRINTF,
-    GETINT,
-
-    JUMP_ABSOLUTE,
+    CALL_PRINTF,
+    CALL_GETINT,
+    EXIT_INTERP,
+    // JUMP_ABSOLUTE,
     // JUMP_FORWARD,
     JUMP_IF_FALSE_OR_POP,
     JUMP_IF_TRUE_OR_POP,
@@ -26,6 +26,7 @@ enum OpCode {
     UNARY_OP,
     BINARY_OP,
 
+    POP_TOP,
     NOP
 };
 
@@ -36,12 +37,14 @@ enum UnaryOpCode {
 };
 
 enum BinaryOpCode {
+    NOTHING = 0,
     BINARY_ADD,
     BINARY_SUB,
     BINARY_MUL,
     BINARY_DIV,
     BINARY_MOD,
     BINARY_EQ,
+    BINARY_NE,
     BINARY_LT,
     BINARY_LE,
     BINARY_GT,

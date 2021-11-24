@@ -11,7 +11,6 @@
 #include <utility>
 #include <vector>
 #include <unordered_map>
-#include <functional>
 #include <cassert>
 
 #define cast dynamic_pointer_cast
@@ -28,7 +27,6 @@ using std::make_shared;
 using std::dynamic_pointer_cast;
 using std::vector;
 using std::unordered_map;
-using std::function;
 using std::move;
 
 class Element {

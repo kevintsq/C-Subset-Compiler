@@ -7,12 +7,20 @@
 
 #include "instruction.h"
 
+using Stack = vector<ObjectP>;
+using StackP = shared_ptr<Stack>;
+
 class StackMachine {
 public:
     vector<InstructionP> &instructions;
-    vector<ObjectP> stack;
+    StackP stack = make_shared<Stack>();
+    vector<StackP> frames{stack};
+    ostream &outs;
 
-    explicit StackMachine(vector<InstructionP> &instructions);
+    explicit StackMachine(vector<InstructionP> &instructions, ostream &outs) : instructions(instructions),
+                                                                               outs(outs) {};
+
+    void run();
 
     friend ostream &operator<<(ostream &out, const StackMachine &self) {
         for (int i = 0; i < self.instructions.size(); i++) {

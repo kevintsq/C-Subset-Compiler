@@ -19,30 +19,38 @@ using ObjectP = shared_ptr<Object>;
 
 class Object {
 public:
-    TypeCode type = VOID;
+    TypeCode type;
     bool is_const = false;
     IdentP ident_info;
 
-    Object() = default;
-
-    explicit Object(TypeCode val_type) : type(val_type) {};
+    explicit Object(TypeCode val_type = VOID) : type(val_type) {};
 
     virtual ~Object() = default;
+
+    Object &operator=(const Object &other) {
+        if (this != &other) {
+            this->type = other.type;
+            this->is_const = other.is_const;
+        }
+        return *this;
+    }
 };
 
 class IntObject : public Object {
 public:
-    int value = 0;
+    long long value = 0;
 
-    explicit IntObject(int value = 0) : Object(INT), value(value) {}
+    explicit IntObject(long long value = 0) : Object(INT), value(value) {}
 };
 
 using IntObjectP = shared_ptr<IntObject>;
+using Array = vector<ObjectP>;
+using ArrayP = shared_ptr<Array>;
 
 class ArrayObject : public Object {
 public:
-    vector<ObjectP> value;
-    vector<ObjectP> dims;
+    ArrayP data;
+    vector<long long> dims;
     int dereference_cnt = 0;
 
     ArrayObject() : Object(INT_ARRAY) {}
@@ -63,7 +71,7 @@ class FuncObject : public Object {
 public:
     TypeCode return_type;
     vector<ObjectP> params;
-    unsigned long long code_offset = 0;
+    long long code_offset = 0;
 
     explicit FuncObject(TypeCode return_type) : Object(FUNCTION), return_type(return_type) {}
 };

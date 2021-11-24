@@ -4,13 +4,21 @@
 
 int main() {
     Error error;
+
     Tokenizer tokenizer("testfile.txt", error);
+
+//    ofstream output("output.txt");
     Parser parser(tokenizer.tokens, error);
-//    StackMachine machine(parser.instructions);
-//    cout << machine;
-    ofstream output("output.txt");
-    output << parser;
-    ofstream error_stream("error.txt");
-    error_stream << error;
+//    output << parser;
+
+    if (error.errors.empty()) {
+        ofstream result("pcoderesult.txt");
+        StackMachine machine(parser.instructions, result);
+        cout << machine;
+        machine.run();
+    } else {
+//        ofstream error_stream("error.txt");
+//        error_stream << error;
+    }
     return EXIT_SUCCESS;
 }

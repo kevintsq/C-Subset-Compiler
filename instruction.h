@@ -6,6 +6,7 @@
 #define CODE_INSTRUCTION_H
 
 #include <sstream>
+#include <utility>
 #include "token.h"
 #include "opcode.h"
 
@@ -14,7 +15,9 @@ public:
     OpCode opcode;
     std::stringstream name;
 
-    Instruction(OpCode opcode, const char *name) : opcode(opcode), name(name) {}
+    Instruction(OpCode opcode, const char *name) : opcode(opcode) {
+        this->name << name;
+    }
 
     friend ostream &operator<<(ostream &out, const Instruction &self) {
         out << self.name.str();
@@ -28,25 +31,33 @@ using InstructionP = shared_ptr<Instruction>;
 
 class LoadObject : public Instruction {
 public:
-    ObjectP &object;
+    ObjectP object;
 
-    explicit LoadObject(ObjectP &object) : Instruction(NAME(LOAD_OBJECT)), object(object) {
+    explicit LoadObject(const ObjectP &object) : Instruction(NAME(LOAD_OBJECT)), object(object) {
         switch (object->type) {
             case INT: {
-                auto o = dynamic_pointer_cast<IntObject>(object);
+                auto o = cast<IntObject>(object);
                 if (object->ident_info == nullptr) {
                     name << '\t' << o->value;
                 } else {
-                    name << '\t' << o->ident_info->name << "\t(int declared in line " << o->ident_info->line << " at "
+                    name << '\t' << o->ident_info->name << "\t(INT, declared in line " << o->ident_info->line << " at "
                          << o << ')';
                 }
                 break;
             }
+            case INT_ARRAY: {
+                auto o = cast<ArrayObject>(object);
+                if (object->ident_info != nullptr) {
+                    name << '\t' << o->ident_info->name << "\t(INT_ARRAY, declared in line " << o->ident_info->line
+                         << " at " << o << ')';
+                }
+                break;
+            }
             case CHAR_ARRAY:
-                name << '\t' << dynamic_pointer_cast<StringObject>(object)->value;
+                name << '\t' << cast<StringObject>(object)->value;
                 break;
             default:
-                break;
+                ERROR_LIMITED_SUPPORT(INT or INT_ARRAY or CHAR_ARRAY);
         }
     }
 };
@@ -56,17 +67,46 @@ public:
     explicit BuildArray() : Instruction(NAME(BUILD_ARRAY)) {}
 };
 
+class InitArray : public Instruction {
+public:
+    ArrayObjectP array;
+
+    explicit InitArray(const ArrayObjectP &array) : Instruction(NAME(INIT_ARRAY)), array(array) {
+        if (array->ident_info != nullptr) {
+            name << '\t' << array->ident_info->name << "\t(INT_ARRAY, declared in line " << array->ident_info->line
+                 << " at " << array << ')';
+        }
+    }
+};
+
+class SubscriptArray : public Instruction {
+public:
+    explicit SubscriptArray() : Instruction(NAME(SUBSCR_ARRAY)) {}
+};
+
+class StoreSubscript : public Instruction {
+public:
+    explicit StoreSubscript() : Instruction(NAME(STORE_SUBSCR)) {}
+};
+
 class StoreObject : public Instruction {
 public:
-    ObjectP &object;
+    ObjectP object;
 
-    explicit StoreObject(ObjectP &object) : Instruction(NAME(STORE_OBJECT)), object(object) {
-        auto o = dynamic_pointer_cast<IntObject>(object);
-        if (object->ident_info == nullptr) {
-            name << '\t' << o->value;
-        } else {
-            name << '\t' << o->ident_info->name << "\t(int declared in line " << o->ident_info->line << " at " << o
-                 << ')';
+    explicit StoreObject(const ObjectP &object) : Instruction(NAME(STORE_OBJECT)), object(object) {
+        if (object->ident_info != nullptr) {
+            switch (object->type) {
+                case INT:
+                    name << '\t' << object->ident_info->name << "\t(INT, declared in line " << object->ident_info->line
+                         << " at " << object << ')';
+                    break;
+                case INT_ARRAY:
+                    name << '\t' << object->ident_info->name << "\t(INT_ARRAY, declared in line " << object->ident_info->line
+                         << " at " << object << ')';
+                    break;
+                default:
+                    ERROR_LIMITED_SUPPORT_WITH_LINE(object->ident_info->line, INT or INT_ARRAY assignment);
+            }
         }
     }
 };
@@ -76,32 +116,37 @@ public:
     explicit PopTop() : Instruction(NAME(POP_TOP)) {}
 };
 
+class Exit : public Instruction {
+public:
+    explicit Exit() : Instruction(NAME(EXIT_INTERP)) {}
+};
+
 class PrintF : public Instruction {
 public:
-    int va_args_cnt;
+    FormatStringP format_string;
 
-    explicit PrintF(int va_args_cnt) : Instruction(NAME(PRINTF)), va_args_cnt(va_args_cnt) {
-        name << '\t' << va_args_cnt;
+    explicit PrintF(const FormatStringP &format_string) : Instruction(NAME(CALL_PRINTF)), format_string(format_string) {
+        name << '\t' << format_string->value;
     }
 };
 
 class GetInt : public Instruction {
 public:
-    explicit GetInt() : Instruction(NAME(GETINT)) {}
+    explicit GetInt() : Instruction(NAME(CALL_GETINT)) {}
 };
 
-class JumpAbsolute : public Instruction {
-public:
-    int offset;
-
-    explicit JumpAbsolute(int offset) : Instruction(NAME(JUMP_ABSOLUTE)), offset(offset) {}
-};
+//class JumpAbsolute : public Instruction {
+//public:
+//    long long offset;
+//
+//    explicit JumpAbsolute(long long offset) : Instruction(NAME(JUMP_ABSOLUTE)), offset(offset) {}
+//};
 
 //class JumpForward : public Instruction {
 //public:
-//    int offset;
+//    long long offset;
 //
-//    explicit JumpForward(int offset) : Instruction(NAME(JUMP_FORWARD)), offset(offset) {}
+//    explicit JumpForward(long long offset) : Instruction(NAME(JUMP_FORWARD)), offset(offset) {}
 //};
 
 class JumpIfFalseOrPop : public Instruction {
@@ -115,15 +160,26 @@ public:
 };
 
 class CallFunction : public Instruction {
+    FuncObjectP func;
 public:
-    FuncObjectP &func;
+    CallFunction() : Instruction(NAME(CALL_FUNCTION)) {}
 
-    explicit CallFunction(FuncObjectP &func) : Instruction(NAME(CALL_FUNCTION)), func(func) {
-        name << '\t' << func->ident_info->name << "\t(" << func->params.size() << " args, "
-                                                                                  "declared in line "
-             << func->ident_info->line << " at " << func << ')';
+    explicit CallFunction(const FuncObjectP &func) : Instruction(NAME(CALL_FUNCTION)) {
+        set_func(func);
+    }
+
+    inline void set_func(const FuncObjectP &f) {
+        func = f;
+        name << '\t' << f->ident_info->name << "\t(" << f->params.size() << " args, offset " << f->code_offset
+             << ", declared in line " << f->ident_info->line << " at " << f << ')';
+    }
+
+    inline FuncObjectP get_func() {
+        return func;
     }
 };
+
+using CallFunctionP = shared_ptr<CallFunction>;
 
 class ReturnValue : public Instruction {
 public:
@@ -141,7 +197,52 @@ class BinaryOperation : public Instruction {
 public:
     BinaryOpCode binary_opcode;
 
-    explicit BinaryOperation(BinaryOpCode opcode) : Instruction(NAME(BINARY_OP)), binary_opcode(opcode) {}
+    explicit BinaryOperation(BinaryOpCode opcode) : Instruction(NAME(BINARY_OP)), binary_opcode(opcode) {
+        switch (opcode) {
+            case BINARY_ADD:
+                name << "\t+";
+                break;
+            case BINARY_SUB:
+                name << "\t-";
+                break;
+            case BINARY_MUL:
+                name << "\t*";
+                break;
+            case BINARY_DIV:
+                name << "\t/";
+                break;
+            case BINARY_MOD:
+                name << "\t%";
+                break;
+            case BINARY_EQ:
+                name << "\t==";
+                break;
+            case BINARY_NE:
+                name << "\t!=";
+                break;
+            case BINARY_LT:
+                name << "\t<";
+                break;
+            case BINARY_LE:
+                name << "\t<=";
+                break;
+            case BINARY_GT:
+                name << "\t>";
+                break;
+            case BINARY_GE:
+                name << "\t>=";
+                break;
+            case BINARY_LOGICAL_AND:
+                name << "\t&&";
+                break;
+            case BINARY_LOGICAL_OR:
+                name << "\t||";
+                break;
+            default:
+                cerr << "In " << __func__ << " line " << __LINE__
+                     << " source code line, NOTHING binary operation shouldn't be generated." << endl;
+        }
+    }
 };
 
 //class UnaryPositive : public Instruction {
