@@ -45,7 +45,8 @@ public:
                 break;
             }
             default:
-                ERROR_LIMITED_SUPPORT(INT or INT_ARRAY);
+//                ERROR_LIMITED_SUPPORT(INT or INT_ARRAY);
+                break;
         }
     }
 };

@@ -72,37 +72,36 @@ void Parser::parse_const_decl(TokenIter &tk, int nest_level) {
 
 ObjectP Parser::check_ident_valid_decl(TokenIter &tk, TypeCode type,
                                        bool is_global = false, bool is_const = false, bool is_func = false) {
-    IdentP current = dynamic_pointer_cast<Identifier>(*tk);
     ObjectP result;
+    switch (type) {
+        case VOID:
+            assert(is_func);
+            result = make_shared<FuncObject>(VOID);
+            break;
+        case INT:
+            if (is_func) {
+                result = make_shared<FuncObject>(INT);
+            } else {
+                result = make_shared<IntObject>();
+            }
+            break;
+        case INT_ARRAY: {
+            assert(!is_func);
+            result = make_shared<ArrayObject>();
+            break;
+        }
+        default:
+            ERROR_EXPECTED_GOT(type VOID or INT or INT_ARRAY, tk - 1);
+    }
+    IdentP current = cast<Identifier>(*tk);
     auto &last_table = sym_table.back();
     if (last_table.find(current->name) == last_table.end()) {
-        switch (type) {
-            case VOID:
-                assert(is_func);
-                result = make_shared<FuncObject>(VOID);
-                break;
-            case INT:
-                if (is_func) {
-                    result = make_shared<FuncObject>(INT);
-                } else {
-                    result = make_shared<IntObject>();
-                }
-                break;
-            case INT_ARRAY: {
-                assert(!is_func);
-                result = make_shared<ArrayObject>();
-                break;
-            }
-            default:
-                ERROR_EXPECTED_GOT(type VOID or INT or INT_ARRAY, tk - 1);
-        }
         result->is_const = is_const;
         result->is_global = is_global;
         result->ident_info = current;
         last_table[current->name] = result;
     } else {
         error(IDENT_REDEFINED, current->line);
-        result = last_table[current->name];
     }
     elements.push_back(*tk++);
     return result;

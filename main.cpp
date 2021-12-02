@@ -23,8 +23,8 @@ int main() {
         chrono::duration<double, ratio<1, 1>> duration_s(chrono::high_resolution_clock::now() - start);
         cout << "Process finished in " << duration_s.count() << " seconds" << endl;
     } else {
-//        ofstream error_stream("error.txt");
-//        error_stream << error;
+        ofstream error_stream("error.txt");
+        error_stream << error;
     }
     return EXIT_SUCCESS;
 }
