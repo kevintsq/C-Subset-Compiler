@@ -8,6 +8,9 @@ Parser::Parser(vector<TokenP> &tokens, Error &error) : tokens(tokens), error(err
     if (!tokens.empty()) {
         auto tk = tokens.begin();
         parse_comp_unit(tk);
+        for (auto &i: arrays) {
+            i->dereference_cnt = 0;  // reset dereference_cnt for vm to use
+        }
     }
 }
 
@@ -423,7 +426,7 @@ void Parser::parse_block_item(TokenIter &tk, int nest_level) {
     }
 }
 
-void Parser::parse_stmt(TokenIter &tk, int nest_level) {  // TODO: 返回值报语句结束的指令
+void Parser::parse_stmt(TokenIter &tk, int nest_level) {
     // Stmt -> LVal '=' Exp ';'
     // | [Exp] ';'
     // | Block
@@ -668,7 +671,7 @@ ObjectP Parser::check_ident_valid_use(TokenIter &tk, bool is_called, bool is_ass
                      << *current << " is not callable" << endl;
             } else if (is_assigned && result->is_const) {
                 error(CANNOT_MODIFY_CONST, current->line);
-            }  // TODO: check
+            }
             return result;
         }
     }
@@ -711,7 +714,12 @@ ObjectP Parser::parse_lvalue(TokenIter &tk, EmitMode emit_mode, bool is_assigned
     }
     ArrayObjectP array = cast<ArrayObject>(result);
     if (array != nullptr) {
-        array->dereference_cnt = cnt > 0 ? cnt : 0;
+        if (cnt > 0) {
+            array->dereference_cnt = cnt;
+            arrays.push_back(array);  // for resetting dereference_cnt after parsing
+        } else {
+            array->dereference_cnt = 0;
+        }
         if (array->is_const && array->dims.size() == indexes.size()) {
             long long index = indexes.back();
             for (int i = 1; i < array->dims.size(); i++) {
@@ -814,9 +822,6 @@ ObjectP Parser::parse_unary_expr(TokenIter &tk, EmitMode emit_mode, BinaryOpCode
         default:
             result = parse_primary_expr(tk, emit_mode);  // pre-fetch
     }
-//    if (last_op != NOTHING) {
-//        instructions.push_back(make_shared<BinaryOperation>(last_op));
-//    }
     elements.push_back(make_shared<UnaryExpr>());
     return result;
 }
@@ -897,7 +902,7 @@ ObjectP Parser::_parse_expr(TokenIter &tk, EmitMode emit_mode, BinaryOpCode last
     ObjectP result, tmp;
     BinaryOpCode next_op = NOTHING;
     while (tk < tokens.end()) {
-        tmp = (this->*parse_first)(tk, emit_mode, last_op);  // TODO: check
+        tmp = (this->*parse_first)(tk, emit_mode, last_op);
         if (result == nullptr || result->type == INT && tmp->type != INT) {
             result = tmp;
         } else if ((emit_mode == NO_EMIT_IN_CONST_DEF || emit_mode == NO_EMIT_IN_FPARAMS || emit_mode == EMIT_IN_VAR_DEF) &&
@@ -925,42 +930,25 @@ ObjectP Parser::_parse_expr(TokenIter &tk, EmitMode emit_mode, BinaryOpCode last
 ObjectP Parser::parse_muldiv_expr(TokenIter &tk, EmitMode emit_mode, BinaryOpCode last_op) {
     // MulExp -> UnaryExp | MulExp ('*' | '/' | '%') UnaryExp
     // MulExp -> UnaryExp { ('*' | '/' | '%') UnaryExp }
-    ObjectP result = _parse_expr<MulDivExpr>(tk, emit_mode, last_op, &Parser::parse_unary_expr, determine_muldiv);
-//    if (last_op != NOTHING) {
-//        instructions.push_back(make_shared<BinaryOperation>(last_op));
-//    }
-    return result;
+    return _parse_expr<MulDivExpr>(tk, emit_mode, last_op, &Parser::parse_unary_expr, determine_muldiv);
 }
 
 ObjectP Parser::parse_addsub_expr(TokenIter &tk, EmitMode emit_mode, BinaryOpCode last_op) {
     // AddExp -> MulExp | AddExp ('+' | '-') MulExp
     // AddExp -> MulExp { ('+' | '-') MulExp }
-    ObjectP result = _parse_expr<AddSubExpr>(tk, emit_mode, last_op, &Parser::parse_muldiv_expr, determine_addsub);
-//    if (last_op != NOTHING) {
-//        instructions.push_back(make_shared<BinaryOperation>(last_op));
-//    }
-    return result;
+    return _parse_expr<AddSubExpr>(tk, emit_mode, last_op, &Parser::parse_muldiv_expr, determine_addsub);
 }
 
 ObjectP Parser::parse_rel_expr(TokenIter &tk, EmitMode emit_mode, BinaryOpCode last_op) {
     // RelExp -> AddExp | RelExp ('<' | '>' | '<=' | '>=') AddExp
     // RelExp -> AddExp { ('<' | '>' | '<=' | '>=') AddExp }
-    ObjectP result = _parse_expr<RelationalExpr>(tk, emit_mode, last_op, &Parser::parse_addsub_expr,
-                                                 determine_relation);
-//    if (last_op != NOTHING) {
-//        instructions.push_back(make_shared<BinaryOperation>(last_op));
-//    }
-    return result;
+    return _parse_expr<RelationalExpr>(tk, emit_mode, last_op, &Parser::parse_addsub_expr, determine_relation);
 }
 
 ObjectP Parser::parse_eq_expr(TokenIter &tk, EmitMode emit_mode, BinaryOpCode last_op) {
     // EqExp -> RelExp | EqExp ('==' | '!=') RelExp
     // EqExp -> RelExp { ('==' | '!=') RelExp }
-    ObjectP result = _parse_expr<EqualExpr>(tk, emit_mode, last_op, &Parser::parse_rel_expr, determine_equality);
-//    if (last_op != NOTHING) {
-//        instructions.push_back(make_shared<BinaryOperation>(last_op));
-//    }
-    return result;
+    return _parse_expr<EqualExpr>(tk, emit_mode, last_op, &Parser::parse_rel_expr, determine_equality);
 }
 
 ObjectP Parser::parse_logical_and_expr(TokenIter &tk, EmitMode emit_mode, BinaryOpCode last_op,
@@ -968,20 +956,12 @@ ObjectP Parser::parse_logical_and_expr(TokenIter &tk, EmitMode emit_mode, Binary
     // LAndExp -> EqExp | LAndExp '&&' EqExp
     // LAndExp -> EqExp { '&&' EqExp }
     ObjectP result, tmp;
-    BinaryOpCode next_op = NOTHING;
+    BinaryOpCode next_op;
     while (tk < tokens.end()) {
         tmp = parse_eq_expr(tk, emit_mode, last_op);
         if (result == nullptr || result->type == INT && tmp->type != INT) {
             result = tmp;
-        } /*else if ((emit_mode == NO_EMIT_IN_CONST_DEF || emit_mode == NO_EMIT_IN_FPARAMS || emit_mode == EMIT_IN_VAR_DEF) &&
-                   result->type == INT && tmp->type == INT) {
-            result = make_shared<IntObject>(
-                    util::binary_operation(last_op, cast<IntObject>(result)->value, cast<IntObject>(tmp)->value));
         }
-        if ((emit_mode == EMIT_IN_VAR_DEF || emit_mode == EMIT_IN_NORM_STMT || emit_mode == EMIT_IN_COND_STMT) &&
-            next_op != NOTHING && next_op == last_op) {
-            instructions.push_back(make_shared<BinaryOperation>(last_op));
-        }*/
         next_op = determine_and((*tk)->token_type);
         if (next_op != NOTHING) {
             last_op = next_op;
@@ -1004,21 +984,13 @@ ObjectP Parser::parse_logical_or_expr(TokenIter &tk, EmitMode emit_mode, BinaryO
     // LOrExp -> LAndExp | LOrExp '||' LAndExp
     // LOrExp -> LAndExp { '||' LAndExp }
     ObjectP result, tmp;
-    BinaryOpCode next_op = NOTHING;
+    BinaryOpCode next_op;
     while (tk < tokens.end()) {
         vector<JumpInstructionP> and_eval_jump_instructions;
         tmp = parse_logical_and_expr(tk, emit_mode, last_op, and_eval_jump_instructions);
         if (result == nullptr || result->type == INT && tmp->type != INT) {
             result = tmp;
-        } /*else if ((emit_mode == NO_EMIT_IN_CONST_DEF || emit_mode == NO_EMIT_IN_FPARAMS || emit_mode == EMIT_IN_VAR_DEF) &&
-                   result->type == INT && tmp->type == INT) {
-            result = make_shared<IntObject>(
-                    util::binary_operation(last_op, cast<IntObject>(result)->value, cast<IntObject>(tmp)->value));
         }
-        if ((emit_mode == EMIT_IN_VAR_DEF || emit_mode == EMIT_IN_NORM_STMT || emit_mode == EMIT_IN_COND_STMT) &&
-            next_op != NOTHING && next_op == last_op) {
-            instructions.push_back(make_shared<BinaryOperation>(last_op));
-        }*/
         next_op = determine_or((*tk)->token_type);
         if (next_op != NOTHING) {
             last_op = next_op;

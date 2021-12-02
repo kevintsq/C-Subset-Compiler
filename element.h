@@ -29,8 +29,7 @@ using std::vector;
 using std::unordered_map;
 using std::move;
 
-class Element {
-public:
+struct Element {
     string fullname;
 
     Element() = default;
@@ -47,153 +46,119 @@ public:
 
 using ElementP = shared_ptr<Element>;
 
-class CompUnit : public Element {
-public:
+struct CompUnit : public Element {
     explicit CompUnit() : Element("<CompUnit>") {}
 };
 
-class ConstDecl : public Element {
-public:
+struct ConstDecl : public Element {
     explicit ConstDecl() : Element("<ConstDecl>") {}
 };
 
-class ConstDef : public Element {
-public:
+struct ConstDef : public Element {
     explicit ConstDef() : Element("<ConstDef>") {}
 };
 
-class ConstInitVal : public Element {
-public:
+struct ConstInitVal : public Element {
     explicit ConstInitVal() : Element("<ConstInitVal>") {}
 };
 
-class VarDecl : public Element {
-public:
+struct VarDecl : public Element {
     explicit VarDecl() : Element("<VarDecl>") {}
 };
 
-class VarDef : public Element {
-public:
+struct VarDef : public Element {
     explicit VarDef() : Element("<VarDef>") {}
 };
 
-class InitVal : public Element {
-public:
+struct InitVal : public Element {
     explicit InitVal() : Element("<InitVal>") {}
 };
 
-class FuncDef : public Element {
-public:
+struct FuncDef : public Element {
     explicit FuncDef() : Element("<FuncDef>") {}
 };
 
-class MainFuncDef : public Element {
-public:
+struct MainFuncDef : public Element {
     explicit MainFuncDef() : Element("<MainFuncDef>") {}
 };
 
-class FuncType : public Element {
-public:
+struct FuncType : public Element {
     explicit FuncType() : Element("<FuncType>") {}
 };
 
-class FuncFormalParams : public Element {
-public:
+struct FuncFormalParams : public Element {
     explicit FuncFormalParams() : Element("<FuncFParams>") {}
 };
 
-class FuncFormalParam : public Element {
-public:
+struct FuncFormalParam : public Element {
     explicit FuncFormalParam() : Element("<FuncFParam>") {}
 };
 
-class Block : public Element {
-public:
+struct Block : public Element {
     explicit Block() : Element("<Block>") {}
 };
 
-class BlockItem : public Element {
-public:
-    explicit BlockItem() : Element("<BlockItem>") {}
-};
-
-class Statement : public Element {
-public:
+struct Statement : public Element {
     explicit Statement() : Element("<Stmt>") {}
 };
 
-class NormalExpr : public Element {
-public:
+struct NormalExpr : public Element {
     explicit NormalExpr() : Element("<Exp>") {}
 };
 
-class ConditionExpr : public Element {
-public:
+struct ConditionExpr : public Element {
     explicit ConditionExpr() : Element("<Cond>") {}
 };
 
-class LValue : public Element {
-public:
+struct LValue : public Element {
     explicit LValue() : Element("<LVal>") {}
 };
 
-class PrimaryExpr : public Element {
-public:
+struct PrimaryExpr : public Element {
     explicit PrimaryExpr() : Element("<PrimaryExp>") {}
 };
 
-class Number : public Element {
-public:
+struct Number : public Element {
     explicit Number() : Element("<Number>") {}
 };
 
-class UnaryExpr : public Element {
-public:
+struct UnaryExpr : public Element {
     explicit UnaryExpr() : Element("<UnaryExp>") {}
 };
 
-class UnaryOp : public Element {
-public:
+struct UnaryOp : public Element {
     explicit UnaryOp() : Element("<UnaryOp>") {}
 };
 
-class FuncRealParams : public Element {
-public:
+struct FuncRealParams : public Element {
     explicit FuncRealParams() : Element("<FuncRParams>") {}
 };
 
-class MulDivExpr : public Element {
-public:
+struct MulDivExpr : public Element {
     explicit MulDivExpr() : Element("<MulExp>") {}
 };
 
-class AddSubExpr : public Element {
-public:
+struct AddSubExpr : public Element {
     explicit AddSubExpr() : Element("<AddExp>") {}
 };
 
-class RelationalExpr : public Element {
-public:
+struct RelationalExpr : public Element {
     explicit RelationalExpr() : Element("<RelExp>") {}
 };
 
-class EqualExpr : public Element {
-public:
+struct EqualExpr : public Element {
     explicit EqualExpr() : Element("<EqExp>") {}
 };
 
-class LogicalAndExpr : public Element {
-public:
+struct LogicalAndExpr : public Element {
     explicit LogicalAndExpr() : Element("<LAndExp>") {}
 };
 
-class LogicalOrExpr : public Element {
-public:
+struct LogicalOrExpr : public Element {
     explicit LogicalOrExpr() : Element("<LOrExp>") {}
 };
 
-class ConstExpr : public Element {
-public:
+struct ConstExpr : public Element {
     explicit ConstExpr() : Element("<ConstExp>") {}
 };
 

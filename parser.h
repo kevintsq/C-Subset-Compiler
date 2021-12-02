@@ -27,17 +27,18 @@ enum EmitMode {
 };
 
 class Parser {
-public:
     Error &error;
     vector<TokenP> &tokens;
-    vector<ElementP> elements;
-    vector<HashMap> sym_table;
-    vector<InstructionP> instructions;
+    vector<ArrayObjectP> arrays;
     InstructionP entry_inst;
 
     vector<LoopInfo> loop_info;
     TypeCode current_func_return_type = INT;
     bool has_return_at_end = false;
+public:
+    vector<ElementP> elements;
+    vector<HashMap> sym_table;
+    vector<InstructionP> instructions;
 
     explicit Parser(vector<TokenP> &tokens, Error &error);
 

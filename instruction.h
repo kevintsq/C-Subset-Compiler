@@ -206,8 +206,6 @@ public:
     inline FuncObjectP get_func() const { return func; }
 };
 
-using CallFunctionP = shared_ptr<CallFunction>;
-
 class ReturnValue : public Instruction {
 public:
     explicit ReturnValue() : Instruction(NAME(RETURN_VALUE) "\n") {}
@@ -283,80 +281,5 @@ public:
         }
     }
 };
-
-//class UnaryPositive : public Instruction {
-//public:
-//    explicit UnaryPositive() : Instruction(NAME(UNARY_POSITIVE)) {}
-//};
-//
-//class UnaryNegative : public Instruction {
-//public:
-//    explicit UnaryNegative() : Instruction(NAME(UNARY_NEGATIVE)) {}
-//};
-//
-//class UnaryNot : public Instruction {
-//public:
-//    explicit UnaryNot() : Instruction(NAME(UNARY_NOT)) {}
-//};
-//
-//class BinaryAdd : public Instruction {
-//public:
-//    explicit BinaryAdd() : Instruction(NAME(BINARY_ADD)) {}
-//};
-//
-//class BinarySub : public Instruction {
-//public:
-//    explicit BinarySub() : Instruction(NAME(BINARY_SUB)) {}
-//};
-//
-//class BinaryMul : public Instruction {
-//public:
-//    explicit BinaryMul() : Instruction(NAME(BINARY_MUL)) {}
-//};
-//
-//class BinaryDiv : public Instruction {
-//public:
-//    explicit BinaryDiv() : Instruction(NAME(BINARY_DIV)) {}
-//};
-//
-//class BinaryMod : public Instruction {
-//public:
-//    explicit BinaryMod() : Instruction(NAME(BINARY_MOD)) {}
-//};
-//
-//class BinaryEq : public Instruction {
-//public:
-//    explicit BinaryEq() : Instruction(NAME(BINARY_EQ)) {}
-//};
-//
-//class BinaryLt : public Instruction {
-//public:
-//    explicit BinaryLt() : Instruction(NAME(BINARY_LT)) {}
-//};
-//
-//class BinaryLe : public Instruction {
-//public:
-//    explicit BinaryLe() : Instruction(NAME(BINARY_LE)) {}
-//};
-//
-//class BinaryGt : public Instruction {
-//public:
-//    explicit BinaryGt() : Instruction(NAME(BINARY_GT)) {}
-//};
-//
-//class BinaryGe : public Instruction {
-//public:
-//    explicit BinaryGe() : Instruction(NAME(BINARY_GE)) {}
-//};
-//
-//class BinaryLogicalAnd : public Instruction {
-//public:
-//    explicit BinaryLogicalAnd() : Instruction(NAME(BINARY_LOGICAL_AND)) {}
-//};
-//
-//class BinaryLogicalOr : public Instruction {
-//public:
-//    explicit BinaryLogicalOr() : Instruction(NAME(BINARY_LOGICAL_OR)) {}
-//};
 
 #endif //CODE_INSTRUCTION_H

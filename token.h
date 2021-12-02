@@ -15,8 +15,7 @@
 
 #define NAME(name) name, #name
 
-class Token : public Element {
-public:
+struct Token : public Element {
     const int line;
     TokenCode token_type;
 
@@ -27,8 +26,7 @@ public:
 
 using TokenP = shared_ptr<Token>;
 
-class Identifier : public Token {
-public:
+struct Identifier : public Token {
     string name;
 
     Identifier(int line, const string &name) : Token(line, IDENFR), name(name) {
@@ -41,16 +39,14 @@ public:
     }
 };
 
-class IntLiteral : public Token, public IntObject {  // it's an r-data
-public:
+struct IntLiteral : public Token, public IntObject {  // it's an r-data
     IntLiteral(int line, int value) : Token(line, INTCON), IntObject(value) {
         this->fullname = "INTCON " + std::to_string(value);
         this->is_const = true;
     }
 };
 
-class FormatString : public Token, public StringObject {  // it's an r-data
-public:
+struct FormatString : public Token, public StringObject {  // it's an r-data
     int fmt_char_cnt = 0;
     vector<string> segments;
 
@@ -62,180 +58,145 @@ public:
 
 using FormatStringP = shared_ptr<FormatString>;
 
-class MainToken : public Token, public FuncObject {
-public:
+struct MainToken : public Token, public FuncObject {
     explicit MainToken(int line) : Token(line, NAME(MAINTK)" main"), FuncObject(INT) {
         this->ident_info = make_shared<Identifier>(line, "main");
     }
 };
 
-class ConstToken : public Token {
-public:
+struct ConstToken : public Token {
     explicit ConstToken(int line) : Token(line, NAME(CONSTTK)" const") {}
 };
 
-class IntToken : public Token {
-public:
+struct IntToken : public Token {
     explicit IntToken(int line) : Token(line, NAME(INTTK)" int") {}
 };
 
-class VoidToken : public Token {
-public:
+struct VoidToken : public Token {
     explicit VoidToken(int line) : Token(line, NAME(VOIDTK)" void") {}
 };
 
-class BreakToken : public Token {
-public:
+struct BreakToken : public Token {
     explicit BreakToken(int line) : Token(line, NAME(BREAKTK)" break") {}
 };
 
-class ContinueToken : public Token {
-public:
+struct ContinueToken : public Token {
     explicit ContinueToken(int line) : Token(line, NAME(CONTINUETK)" continue") {}
 };
 
-class IfToken : public Token {
-public:
+struct IfToken : public Token {
     explicit IfToken(int line) : Token(line, NAME(IFTK)" if") {}
 };
 
-class ElseToken : public Token {
-public:
+struct ElseToken : public Token {
     explicit ElseToken(int line) : Token(line, NAME(ELSETK)" else") {}
 };
 
-class WhileToken : public Token {
-public:
+struct WhileToken : public Token {
     explicit WhileToken(int line) : Token(line, NAME(WHILETK)" while") {}
 };
 
-class GetintToken : public Token {
-public:
+struct GetintToken : public Token {
     explicit GetintToken(int line) : Token(line, NAME(GETINTTK)" getint") {}
 };
 
-class PrintfToken : public Token {
-public:
+struct PrintfToken : public Token {
     explicit PrintfToken(int line) : Token(line, NAME(PRINTFTK)" printf") {}
 };
 
-class ReturnToken : public Token {
-public:
+struct ReturnToken : public Token {
     explicit ReturnToken(int line) : Token(line, NAME(RETURNTK)" return") {}
 };
 
-class NotToken : public Token {
-public:
+struct NotToken : public Token {
     explicit NotToken(int line) : Token(line, NAME(NOT)" !") {}
 };
 
-class AndToken : public Token {
-public:
+struct AndToken : public Token {
     explicit AndToken(int line) : Token(line, NAME(AND)" &&") {}
 };
 
-class OrToken : public Token {
-public:
+struct OrToken : public Token {
     explicit OrToken(int line) : Token(line, NAME(OR)" ||") {}
 };
 
-class AddToken : public Token {
-public:
+struct AddToken : public Token {
     explicit AddToken(int line) : Token(line, NAME(PLUS)" +") {}
 };
 
-class SubToken : public Token {
-public:
+struct SubToken : public Token {
     explicit SubToken(int line) : Token(line, NAME(MINU)" -") {}
 };
 
-class MulToken : public Token {
-public:
+struct MulToken : public Token {
     explicit MulToken(int line) : Token(line, NAME(MULT)" *") {}
 };
 
-class DivToken : public Token {
-public:
+struct DivToken : public Token {
     explicit DivToken(int line) : Token(line, NAME(DIV)" /") {}
 };
 
-class ModToken : public Token {
-public:
+struct ModToken : public Token {
     explicit ModToken(int line) : Token(line, NAME(MOD)" %") {}
 };
 
-class LtToken : public Token {
-public:
+struct LtToken : public Token {
     explicit LtToken(int line) : Token(line, NAME(LSS)" <") {}
 };
 
-class LeToken : public Token {
-public:
+struct LeToken : public Token {
     explicit LeToken(int line) : Token(line, NAME(LEQ)" <=") {}
 };
 
-class GtToken : public Token {
-public:
+struct GtToken : public Token {
     explicit GtToken(int line) : Token(line, NAME(GRE)" >") {}
 };
 
-class GeToken : public Token {
-public:
+struct GeToken : public Token {
     explicit GeToken(int line) : Token(line, NAME(GEQ)" >=") {}
 };
 
-class EqToken : public Token {
-public:
+struct EqToken : public Token {
     explicit EqToken(int line) : Token(line, NAME(EQL)" ==") {}
 };
 
-class NeToken : public Token {
-public:
+struct NeToken : public Token {
     explicit NeToken(int line) : Token(line, NAME(NEQ)" !=") {}
 };
 
-class AssignToken : public Token {
-public:
+struct AssignToken : public Token {
     explicit AssignToken(int line) : Token(line, NAME(ASSIGN)" =") {}
 };
 
-class Semicolon : public Token {
-public:
+struct Semicolon : public Token {
     explicit Semicolon(int line) : Token(line, NAME(SEMICN)" ;") {}
 };
 
-class Comma : public Token {
-public:
+struct Comma : public Token {
     explicit Comma(int line) : Token(line, NAME(COMMA)" ,") {}
 };
 
-class LParen : public Token {
-public:
+struct LParen : public Token {
     explicit LParen(int line) : Token(line, NAME(LPARENT)" (") {}
 };
 
-class RParen : public Token {
-public:
+struct RParen : public Token {
     explicit RParen(int line) : Token(line, NAME(RPARENT)" )") {}
 };
 
-class LBracket : public Token {
-public:
+struct LBracket : public Token {
     explicit LBracket(int line) : Token(line, NAME(LBRACK)" [") {}
 };
 
-class RBracket : public Token {
-public:
+struct RBracket : public Token {
     explicit RBracket(int line) : Token(line, NAME(RBRACK)" ]") {}
 };
 
-class LBrace : public Token {
-public:
+struct LBrace : public Token {
     explicit LBrace(int line) : Token(line, NAME(LBRACE)" {") {}
 };
 
-class RBrace : public Token {
-public:
+struct RBrace : public Token {
     explicit RBrace(int line) : Token(line, NAME(RBRACE)" }") {}
 };
 

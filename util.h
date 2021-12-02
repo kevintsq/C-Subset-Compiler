@@ -8,8 +8,7 @@
 #include "opcode.h"
 #include "error.h"
 
-class util {
-public:
+namespace util {
     static inline int binary_operation(BinaryOpCode opcode, int left, int right) {
         switch (opcode) {
             case BINARY_ADD: return left + right;
@@ -37,6 +36,6 @@ public:
             default: ERROR_NOT_SUPPORTED(NOTHING opreator);
         }
     }
-};
+}
 
 #endif //CODE_UTIL_H

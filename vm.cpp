@@ -94,20 +94,7 @@ void StackMachine::run() {
                 stack->pop_back();
                 ArrayObjectP array = cast<ArrayObject>(stack->back());
                 stack->pop_back();
-                if (array->dims.size() == 1) {
-                    stack->push_back((*array->data)[index]);
-                } else {
-                    ArrayObjectP sliced = make_shared<ArrayObject>();
-                    long long begin = index, end = index + 1;
-                    for (auto it = array->dims.begin() + 1; it != array->dims.end(); ++it) {
-                        sliced->dims.push_back(*it);
-                        begin *= *it;
-                        end *= *it;
-                    }
-                    sliced->alloc(end - begin);  // pointers are copied because high dimension array is flattened
-                    sliced->data->insert(sliced->data->end(), array->data->begin() + begin, array->data->begin() + end);
-                    stack->push_back(sliced);
-                }
+                stack->push_back((*array)[index]);
                 ++pc;
                 break;
             }
@@ -165,12 +152,11 @@ void StackMachine::run() {
                     ObjectP o = stack->back();
                     switch (o->type) {
                         case INT:
-                            new_frame->objects[params[i]->ident_info] = cast<IntObject>(o)->copy();  // TODO: check
+                            new_frame->objects[params[i]->ident_info] = cast<IntObject>(o)->copy();
                             break;
                         case INT_ARRAY: {
-                            ArrayObjectP array = make_shared<ArrayObject>();
+                            ArrayObjectP array = cast<ArrayObject>(o->copy());
                             new_frame->objects[params[i]->ident_info] = array;
-                            array->data = cast<ArrayObject>(o)->data;
                             array->dims = cast<ArrayObject>(params[i])->dims;
                             break;  // note the dimension difference when addressing
                         }

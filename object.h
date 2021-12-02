@@ -28,7 +28,7 @@ public:
 
     explicit Object(TypeCode val_type = VOID) : type(val_type) {};
 
-    virtual ObjectP copy() {
+    virtual inline ObjectP copy() const {
         return make_shared<Object>(*this);
     }
 
@@ -47,7 +47,7 @@ public:
 
     explicit IntObject(int value = 0) : Object(INT), value(value) {}
 
-    ObjectP copy() override {
+    inline ObjectP copy() const override {
         return make_shared<IntObject>(*this);
     }
 };
@@ -56,11 +56,16 @@ using IntObjectP = shared_ptr<IntObject>;
 using Array = vector<ObjectP>;
 using ArrayP = shared_ptr<Array>;
 
+class ArrayObject;
+
+using ArrayObjectP = shared_ptr<ArrayObject>;
+
 class ArrayObject : public Object {
 public:
     ArrayP data;  // have to use pointer for convenience when passing arguments to functions (cannot use `swap` method)
     vector<long long> dims;
     int dereference_cnt = 0;
+    long long base = 0;
 
     explicit ArrayObject(bool alloc = false) : Object(INT_ARRAY) {
         if (alloc) {
@@ -72,7 +77,22 @@ public:
         alloc(size);
     }
 
-    ObjectP copy() override {
+    inline ObjectP operator[](long long index) const {
+        if (dereference_cnt + 1 >= dims.size()) {
+            return (*data)[base + index];
+        } else {
+            ArrayObjectP array = make_shared<ArrayObject>(*this);
+            array->dereference_cnt++;
+            long long begin = index;
+            for (auto it = dims.begin() + array->dereference_cnt; it != dims.end(); ++it) {
+                begin *= *it;
+            }
+            array->base += begin;
+            return array;
+        }
+    }
+
+    inline ObjectP copy() const override {
         return make_shared<ArrayObject>(*this);
     }
 
@@ -82,8 +102,6 @@ public:
     }
 };
 
-using ArrayObjectP = shared_ptr<ArrayObject>;
-
 class StringObject : public Object {
 public:
     string value;
@@ -92,7 +110,7 @@ public:
         value.assign(start, length);
     }
 
-    ObjectP copy() override { return make_shared<StringObject>(*this); }
+    inline ObjectP copy() const override { return make_shared<StringObject>(*this); }
 };
 
 class FuncObject : public Object {
@@ -103,7 +121,7 @@ public:
 
     explicit FuncObject(TypeCode return_type) : Object(FUNCTION), return_type(return_type) {}
 
-    ObjectP copy() override { return make_shared<FuncObject>(*this); }
+    inline ObjectP copy() const override { return make_shared<FuncObject>(*this); }
 };
 
 using FuncObjectP = shared_ptr<FuncObject>;

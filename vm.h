@@ -10,8 +10,7 @@
 using Stack = vector<ObjectP>;
 using StackP = shared_ptr<Stack>;
 
-class Frame {
-public:
+struct Frame {
     unordered_map<IdentP, ObjectP> objects{CACHE_LINE_SIZE / sizeof(ObjectP)};
     StackP stack = make_shared<Stack>();
     long long return_offset = 0;
