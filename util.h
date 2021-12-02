@@ -10,7 +10,7 @@
 
 class util {
 public:
-    static inline long long binary_operation(BinaryOpCode opcode, long long left, long long right) {
+    static inline int binary_operation(BinaryOpCode opcode, int left, int right) {
         switch (opcode) {
             case BINARY_ADD: return left + right;
             case BINARY_SUB: return left - right;
@@ -29,7 +29,7 @@ public:
         }
     }
 
-    static inline long long unary_operation(UnaryOpCode opcode, long long value) {
+    static inline int unary_operation(UnaryOpCode opcode, int value) {
         switch (opcode) {
             case UNARY_POSITIVE: return +value;
             case UNARY_NEGATIVE: return -value;

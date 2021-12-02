@@ -9,6 +9,8 @@
 #include "token_code.h"
 #include "type_code.h"
 
+#define CACHE_LINE_SIZE 64
+
 class Identifier;
 
 using IdentP = shared_ptr<Identifier>;
@@ -21,11 +23,14 @@ class Object {
 public:
     TypeCode type;
     bool is_const = false;
+    bool is_global = false;
     IdentP ident_info;
 
     explicit Object(TypeCode val_type = VOID) : type(val_type) {};
 
-    virtual ~Object() = default;
+    virtual ObjectP copy() {
+        return make_shared<Object>(*this);
+    }
 
     Object &operator=(const Object &other) {
         if (this != &other) {
@@ -38,9 +43,13 @@ public:
 
 class IntObject : public Object {
 public:
-    long long value = 0;
+    int value = 0;
 
-    explicit IntObject(long long value = 0) : Object(INT), value(value) {}
+    explicit IntObject(int value = 0) : Object(INT), value(value) {}
+
+    ObjectP copy() override {
+        return make_shared<IntObject>(*this);
+    }
 };
 
 using IntObjectP = shared_ptr<IntObject>;
@@ -49,11 +58,28 @@ using ArrayP = shared_ptr<Array>;
 
 class ArrayObject : public Object {
 public:
-    ArrayP data;
+    ArrayP data;  // have to use pointer for convenience when passing arguments to functions (cannot use `swap` method)
     vector<long long> dims;
     int dereference_cnt = 0;
 
-    ArrayObject() : Object(INT_ARRAY) {}
+    explicit ArrayObject(bool alloc = false) : Object(INT_ARRAY) {
+        if (alloc) {
+            this->alloc();
+        }
+    }
+
+    explicit ArrayObject(long long size) : Object(INT_ARRAY) {
+        alloc(size);
+    }
+
+    ObjectP copy() override {
+        return make_shared<ArrayObject>(*this);
+    }
+
+    void alloc(long long size = CACHE_LINE_SIZE / sizeof(ObjectP)) {
+        data = make_shared<Array>();
+        data->reserve(size);
+    }
 };
 
 using ArrayObjectP = shared_ptr<ArrayObject>;
@@ -65,6 +91,8 @@ public:
     explicit StringObject(const char *start, long long length) : Object(CHAR_ARRAY) {
         value.assign(start, length);
     }
+
+    ObjectP copy() override { return make_shared<StringObject>(*this); }
 };
 
 class FuncObject : public Object {
@@ -74,6 +102,8 @@ public:
     long long code_offset = 0;
 
     explicit FuncObject(TypeCode return_type) : Object(FUNCTION), return_type(return_type) {}
+
+    ObjectP copy() override { return make_shared<FuncObject>(*this); }
 };
 
 using FuncObjectP = shared_ptr<FuncObject>;

@@ -18,11 +18,11 @@
 class Token : public Element {
 public:
     const int line;
-    TokenCode type;
+    TokenCode token_type;
 
-    Token(int line, TokenCode type) : line(line), type(type) {}
+    Token(int line, TokenCode type) : line(line), token_type(type) {}
 
-    Token(int line, TokenCode type, string &&name) : Element(move(name)), line(line), type(type) {}
+    Token(int line, TokenCode type, string &&name) : Element(move(name)), line(line), token_type(type) {}
 };
 
 using TokenP = shared_ptr<Token>;
@@ -48,8 +48,6 @@ public:
         this->is_const = true;
     }
 };
-
-using IntLiteralP = shared_ptr<IntLiteral>;
 
 class FormatString : public Token, public StringObject {  // it's an r-data
 public:

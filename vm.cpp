@@ -8,18 +8,49 @@ void StackMachine::run() {
     auto pc = instructions.begin();
     while (pc < instructions.end()) {
         switch ((*pc)->opcode) {
-            case LOAD_OBJECT:
-                stack->push_back(cast<LoadObject>(*pc)->object);
+            case LOAD_FAST:
+                stack->push_back(cast<LoadFast>(*pc)->object);
                 ++pc;
                 break;
-            case STORE_OBJECT: {
-                IntObjectP o = cast<IntObject>(stack->back());
-                stack->pop_back();
-                if (cast<StoreObject>(*pc)->object->is_const) {
-                    ERROR_NOT_SUPPORTED(modifing const);
+            case LOAD_NAME: {
+                ObjectP info = cast<LoadName>(*pc)->object;
+                if (info->is_global) {
+                    stack->push_back(globals[info->ident_info->name]);
                 } else {
-                    cast<IntObject>(cast<StoreObject>(*pc)->object)->value = o->value;
+                    auto &objects = frames.back()->objects;
+                    auto it = objects.find(info->ident_info);
+                    if (it != objects.end()) {
+                        stack->push_back((*it).second);
+                    } else {
+                        cerr << "WARNING: use of unbound name " << info->ident_info->name << " (declared in line "
+                             << info->ident_info->line << "), has bound its value to 0" << endl;
+                        IntObjectP o = make_shared<IntObject>();
+                        objects[info->ident_info] = o;
+                        stack->push_back(o);
+                    }
                 }
+                ++pc;
+                break;
+            }
+            case STORE_NAME: {
+                ObjectP o = cast<StoreName>(*pc)->object;
+                auto &name = o->ident_info->name;
+                auto &locals = frames.back()->objects;
+                if (o->is_const) {
+                    ERROR_NOT_SUPPORTED(modifing const);
+                } else if (o->is_global) {
+                    if (o->type == INT_ARRAY) {
+                        cast<ArrayObject>(globals[name])->data = cast<ArrayObject>(stack->back())->data;
+                    } else {
+                        globals[name] = stack->back()->copy();  // replace store, must be copied
+                    }
+                } else {
+                    if (o->type == INT_ARRAY) {
+                        cast<ArrayObject>(stack->back())->dims = cast<ArrayObject>(o)->dims;
+                    }  // dim of array on stack may be unknown, so we need to copy them
+                    locals[o->ident_info] = stack->back()->copy();  // replace store, must be copied
+                }
+                stack->pop_back();
                 ++pc;
                 break;
             }
@@ -30,30 +61,30 @@ void StackMachine::run() {
             case BUILD_ARRAY: {
                 long long size = cast<IntObject>(stack->back())->value;
                 stack->pop_back();
-                ArrayObjectP array = cast<ArrayObject>(stack->back());
-                if (!array->is_const) {
-                    array->data = make_shared<Array>();
-                    for (long long i = 0; i < size; i++) {
-                        array->data->push_back(make_shared<IntObject>());
-                    }
+                ArrayObjectP array = make_shared<ArrayObject>(size);
+                for (long long i = 0; i < size; i++) {
+                    array->data->push_back(make_shared<IntObject>());  // zeroed for safety
                 }
-                stack->pop_back();
+                stack->push_back(array);
                 ++pc;
                 break;
             }
             case INIT_ARRAY: {
-                auto &array = cast<InitArray>(*pc)->array->data;
-                for (auto i = (long long) array->size() - 1; i >= 0; i--) {
-                    (*array)[i] = stack->back();
-                    stack->pop_back();
+                ArrayObjectP array = make_shared<ArrayObject>((long long) stack->size());
+                // not safe to use `*array->data = *stack` because stack size may be smaller than the array size
+                // shouldn't use `insert` because zeros are not overwritten
+                for (auto &i: *stack) {
+                    array->data->push_back(i->copy());  // must be copied
                 }
+                stack->clear();
+                stack->push_back(array);
                 ++pc;
                 break;
             }
             case STORE_SUBSCR: {
-                long long value = cast<IntObject>(stack->back())->value;
+                auto value = cast<IntObject>(stack->back())->value;
                 stack->pop_back();
-                cast<IntObject>(stack->back())->value = value;
+                cast<IntObject>(stack->back())->value = value;  // in-place store, must not be copied
                 stack->pop_back();
                 ++pc;
                 break;
@@ -73,10 +104,8 @@ void StackMachine::run() {
                         begin *= *it;
                         end *= *it;
                     }
-                    sliced->data = make_shared<Array>();
-                    for (long long i = begin; i < end; i++) {
-                        sliced->data->push_back((*array->data)[i]);
-                    }
+                    sliced->alloc(end - begin);  // pointers are copied because high dimension array is flattened
+                    sliced->data->insert(sliced->data->end(), array->data->begin() + begin, array->data->begin() + end);
                     stack->push_back(sliced);
                 }
                 ++pc;
@@ -89,10 +118,29 @@ void StackMachine::run() {
                 ++pc;
                 break;
             }
-            case JUMP_IF_FALSE_OR_POP:
+            case JUMP_ABSOLUTE:
+                pc = instructions.begin() + cast<JumpAbsolute>(*pc)->get_offset();
                 break;
-            case JUMP_IF_TRUE_OR_POP:
+            case POP_JUMP_IF_FALSE: {
+                long long value = cast<IntObject>(stack->back())->value;
+                stack->pop_back();
+                if (!value) {
+                    pc = instructions.begin() + cast<PopJumpIfFalse>(*pc)->get_offset();
+                } else {
+                    ++pc;
+                }
                 break;
+            }
+            case POP_JUMP_IF_TRUE: {
+                long long value = cast<IntObject>(stack->back())->value;
+                stack->pop_back();
+                if (value) {
+                    pc = instructions.begin() + cast<PopJumpIfTrue>(*pc)->get_offset();
+                } else {
+                    ++pc;
+                }
+                break;
+            }
             case CALL_PRINTF: {
                 FormatStringP fmt_str = cast<PrintF>(*pc)->format_string;
                 auto seg_it = fmt_str->segments.begin();
@@ -108,57 +156,64 @@ void StackMachine::run() {
             }
             case EXIT_INTERP:
                 return;
-            case CALL_FUNCTION: {  // 由于编译时已为所有变量分配好空间，且和 Python 一样根据名字找变量，函数传参放入变量池而非栈
-                StackP new_frame = make_shared<Stack>();
-                new_frame->push_back(make_shared<IntObject>(pc - instructions.begin() + 1));
+            case CALL_FUNCTION: {
+                FrameP new_frame = make_shared<Frame>();
+                new_frame->return_offset = pc - instructions.begin() + 1;
                 FuncObjectP func = cast<CallFunction>(*pc)->get_func();
                 auto &params = func->params;
                 for (auto i = (long long) params.size() - 1; i >= 0; i--) {
                     ObjectP o = stack->back();
                     switch (o->type) {
                         case INT:
-                            cast<IntObject>(params[i])->value = cast<IntObject>(o)->value;
+                            new_frame->objects[params[i]->ident_info] = cast<IntObject>(o)->copy();  // TODO: check
                             break;
-                        case INT_ARRAY:
-                            cast<ArrayObject>(params[i])->data = cast<ArrayObject>(o)->data;
+                        case INT_ARRAY: {
+                            ArrayObjectP array = make_shared<ArrayObject>();
+                            new_frame->objects[params[i]->ident_info] = array;
+                            array->data = cast<ArrayObject>(o)->data;
+                            array->dims = cast<ArrayObject>(params[i])->dims;
                             break;  // note the dimension difference when addressing
+                        }
                         default:
                             ERROR_LIMITED_SUPPORT(INT or INT_ARRAY function arguments);
                     }
                     stack->pop_back();
                 }
-                stack = new_frame;
+                stack = new_frame->stack;
                 frames.push_back(new_frame);
                 pc = instructions.begin() + func->code_offset;
                 break;
             }
             case RETURN_VALUE: {
-                if (stack->size() > 1) {
-                    assert(stack->size() == 2);
+                if (!stack->empty()) {
+                    assert(stack->size() == 1);
                     ObjectP value = stack->back();
                     stack->pop_back();
-                    pc = instructions.begin() + cast<IntObject>(stack->back())->value;
+                    pc = instructions.begin() + frames.back()->return_offset;
                     frames.pop_back();
-                    stack = frames.back();
+                    stack = frames.back()->stack;
                     stack->push_back(value);
                 } else {
-                    pc = instructions.begin() + cast<IntObject>(stack->back())->value;
+                    pc = instructions.begin() + frames.back()->return_offset;
                     frames.pop_back();
-                    stack = frames.back();
+                    stack = frames.back()->stack;
+                    stack->push_back(make_shared<Object>());
+                    // void object is returned for void function because the POP_TOP instruction is always added
+                    // after the function call when the return value is not used
                 }
                 break;
             }
             case UNARY_OP: {
-                long long value = cast<IntObject>(stack->back())->value;
+                auto value = cast<IntObject>(stack->back())->value;
                 stack->pop_back();
                 stack->push_back(make_shared<IntObject>(util::unary_operation(cast<UnaryOperation>(*pc)->unary_opcode, value)));
                 ++pc;
                 break;
             }
             case BINARY_OP: {
-                long long right = cast<IntObject>(stack->back())->value;
+                auto right = cast<IntObject>(stack->back())->value;
                 stack->pop_back();
-                long long left = cast<IntObject>(stack->back())->value;
+                auto left = cast<IntObject>(stack->back())->value;
                 stack->pop_back();
                 stack->push_back(make_shared<IntObject>(util::binary_operation(cast<BinaryOperation>(*pc)->binary_opcode, left, right)));
                 ++pc;
