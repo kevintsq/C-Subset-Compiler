@@ -222,8 +222,8 @@ ObjectP Parser::parse_init_val(TokenIter &tk, EmitMode emit_mode) {
     ObjectP result;
     if ((*tk)->token_type == LBRACE) {
         elements.push_back(*tk++);
+        ArrayObjectP array = make_shared<ArrayObject>(true);
         if ((*tk)->token_type != RBRACE) {
-            ArrayObjectP array = make_shared<ArrayObject>(true);
             while (tk < tokens.end()) {
                 ObjectP o = parse_init_val<ExprT, ElementT>(tk, emit_mode);
                 if (emit_mode == NO_EMIT_IN_CONST_DEF && o->type == INT_ARRAY) {
@@ -238,8 +238,8 @@ ObjectP Parser::parse_init_val(TokenIter &tk, EmitMode emit_mode) {
                     break;
                 }
             }
-            result = array;
         }
+        result = array;
         if ((*tk)->token_type == RBRACE) {
             elements.push_back(*tk++);
         } else {
