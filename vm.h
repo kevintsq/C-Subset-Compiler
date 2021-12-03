@@ -12,8 +12,12 @@ using StackP = shared_ptr<Stack>;
 
 struct Frame {
     unordered_map<IdentP, ObjectP> objects{CACHE_LINE_SIZE / sizeof(ObjectP)};
-    StackP stack = make_shared<Stack>(CACHE_LINE_SIZE / sizeof(ObjectP));
+    StackP stack = make_shared<Stack>();
     long long return_offset = 0;
+
+    Frame() {
+        stack->reserve(CACHE_LINE_SIZE / sizeof(ObjectP));
+    }
 };
 
 using FrameP = shared_ptr<Frame>;
