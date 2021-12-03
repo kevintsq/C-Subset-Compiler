@@ -660,7 +660,7 @@ ObjectP Parser::parse_cond_expr(TokenIter &tk, EmitMode emit_mode, vector<JumpIn
 }
 
 ObjectP Parser::check_ident_valid_use(TokenIter &tk, bool is_called, bool is_assigned = false) {
-    IdentP current = dynamic_pointer_cast<Identifier>(*tk);
+    IdentP current = cast<Identifier>(*tk);
     elements.push_back(*tk++);
     ObjectP result;
     for (auto p = sym_table.rbegin(); p != sym_table.rend(); ++p) {
