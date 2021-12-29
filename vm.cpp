@@ -73,6 +73,8 @@ void StackMachine::run() {
                 ArrayObjectP array = make_shared<ArrayObject>((long long) stack->size());
                 // not safe to use `*array->data = *stack` because stack size may be smaller than the array size
                 // shouldn't use `insert` because zeros are not overwritten
+                // the operand of the instruction is not used because we don't have the `ArrayLiteral` class to
+                // record the actual size of the array literal when VLA is supported
                 for (auto &i: *stack) {
                     array->data->push_back(i->copy());  // must be copied
                 }

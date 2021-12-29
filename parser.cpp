@@ -230,6 +230,7 @@ ObjectP Parser::parse_init_val(TokenIter &tk, EmitMode emit_mode) {
             while (tk < tokens.end()) {
                 ObjectP o = parse_init_val<ExprT, ElementT>(tk, emit_mode);
                 if (emit_mode == NO_EMIT_IN_CONST_DEF && o->type == INT_ARRAY) {
+                    // `emit_mode` is tested for nested array support maybe in the future
                     ArrayObjectP tmp = cast<ArrayObject>(o);
                     array->data->insert(array->data->end(), tmp->data->begin(), tmp->data->end());
                 } else {

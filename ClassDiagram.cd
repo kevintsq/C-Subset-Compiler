@@ -1,0 +1,200 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<ClassDiagram MajorVersion="1" MinorVersion="1" MembersFormat="FullSignature">
+  <Class Name="Error">
+    <Position X="13.25" Y="0.5" Width="1.5" />
+    <TypeIdentifier>
+      <HashCode>AAAAAAAAAAAAAAQAEAEAAAAAAAAAAAAAAAAAAAAAAAA=</HashCode>
+      <FileName>error.h</FileName>
+    </TypeIdentifier>
+  </Class>
+  <Class Name="Instruction">
+    <Position X="16.75" Y="0.5" Width="1.5" />
+    <TypeIdentifier>
+      <HashCode>AAAABAAAAAAAAQAAAAAAAAAAAAAMAAAAAAAAAAAAAAA=</HashCode>
+      <FileName>instruction.h</FileName>
+    </TypeIdentifier>
+  </Class>
+  <Class Name="JumpInstruction">
+    <Position X="16.75" Y="2.75" Width="1.5" />
+    <TypeIdentifier>
+      <HashCode>AACAAAAIAAAAAAAAAAAAAIAAAAAAAAAAAAAAAAAAAAg=</HashCode>
+      <FileName>instruction.h</FileName>
+    </TypeIdentifier>
+  </Class>
+  <Class Name="JumpAbsolute" Collapsed="true">
+    <Position X="16.75" Y="5.5" Width="1.5" />
+    <TypeIdentifier>
+      <HashCode>AAAAAAAAAAAAAAAAAAAAAAAAIAAAAAAAAAAAAAAAAAA=</HashCode>
+      <FileName>instruction.h</FileName>
+    </TypeIdentifier>
+  </Class>
+  <Class Name="PopJumpIfFalse" Collapsed="true">
+    <Position X="18.5" Y="5.5" Width="1.5" />
+    <TypeIdentifier>
+      <HashCode>ABAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA=</HashCode>
+      <FileName>instruction.h</FileName>
+    </TypeIdentifier>
+  </Class>
+  <Class Name="PopJumpIfTrue" Collapsed="true">
+    <Position X="15" Y="5.5" Width="1.5" />
+    <TypeIdentifier>
+      <HashCode>AEAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA=</HashCode>
+      <FileName>instruction.h</FileName>
+    </TypeIdentifier>
+  </Class>
+  <Class Name="Object">
+    <Position X="5.25" Y="0.5" Width="1.5" />
+    <TypeIdentifier>
+      <HashCode>AAAgAAAAAQAAAAAgAAAAIAAAAAABAAIAAAAgAAAAAAA=</HashCode>
+      <FileName>object.h</FileName>
+    </TypeIdentifier>
+  </Class>
+  <Class Name="IntObject">
+    <Position X="2.75" Y="3.5" Width="1.5" />
+    <TypeIdentifier>
+      <HashCode>AAAAAAABAAAAAAAAAAAAAAAAAAAAACIAAAAAAAAAAAA=</HashCode>
+      <FileName>object.h</FileName>
+    </TypeIdentifier>
+  </Class>
+  <Class Name="ArrayObject">
+    <Position X="8" Y="3.5" Width="1.5" />
+    <TypeIdentifier>
+      <HashCode>AEBQAAQAAAAAAAAACAAAAAAAAAEAAAIAAAAQAAAAAAA=</HashCode>
+      <FileName>object.h</FileName>
+    </TypeIdentifier>
+  </Class>
+  <Class Name="StringObject">
+    <Position X="4.5" Y="3.5" Width="1.5" />
+    <TypeIdentifier>
+      <HashCode>AAAAAAAIAAAAAAAAAAAAAAAAAAAAACIAAAAAAAAAAAA=</HashCode>
+      <FileName>object.h</FileName>
+    </TypeIdentifier>
+  </Class>
+  <Class Name="FuncObject">
+    <Position X="6.25" Y="3.5" Width="1.5" />
+    <TypeIdentifier>
+      <HashCode>AAAAIAAAAAADAAAAAAAAAAAAAAAQAAIAAAAAAAAAAAA=</HashCode>
+      <FileName>object.h</FileName>
+    </TypeIdentifier>
+  </Class>
+  <Class Name="Parser">
+    <Position X="11.5" Y="0.5" Width="1.5" />
+    <TypeIdentifier>
+      <HashCode>ABHoUJABAcTEgByAEA0iAAgQAAAGAABQKEBAIMFIRAo=</HashCode>
+      <FileName>parser.h</FileName>
+    </TypeIdentifier>
+  </Class>
+  <Class Name="Tokenizer">
+    <Position X="9.75" Y="0.5" Width="1.5" />
+    <TypeIdentifier>
+      <HashCode>AAGAAAAAAQAAAAAAAAAIAAAAAAAAAAAAAAAAAAAAACA=</HashCode>
+      <FileName>tokenizer.h</FileName>
+    </TypeIdentifier>
+  </Class>
+  <Class Name="StackMachine">
+    <Position X="15" Y="0.5" Width="1.5" />
+    <TypeIdentifier>
+      <HashCode>AAAAAgAAAAAAAAAAAACAAAAAAAAAAIAICAABAQAAAAA=</HashCode>
+      <FileName>vm.h</FileName>
+    </TypeIdentifier>
+  </Class>
+  <Struct Name="Element">
+    <Position X="1" Y="0.5" Width="1.5" />
+    <TypeIdentifier>
+      <HashCode>AAAAAAAAAAAAAAAAAAgIAAAAAAAAAAAAAAAAAAACAAA=</HashCode>
+      <FileName>element.h</FileName>
+    </TypeIdentifier>
+  </Struct>
+  <Struct Name="LoopInfo">
+    <Position X="13.25" Y="7.5" Width="1.5" />
+    <TypeIdentifier>
+      <HashCode>AAAAAIAAAAAAAAAgAAAACAAAAAAAAAAAAAAAAAAAAAA=</HashCode>
+      <FileName>parser.h</FileName>
+    </TypeIdentifier>
+  </Struct>
+  <Struct Name="Token">
+    <Position X="1" Y="3.5" Width="1.5" />
+    <TypeIdentifier>
+      <HashCode>AAEAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAABQAA=</HashCode>
+      <FileName>token.h</FileName>
+    </TypeIdentifier>
+  </Struct>
+  <Struct Name="IntLiteral">
+    <Position X="2.75" Y="6.25" Width="1.5" />
+    <TypeIdentifier>
+      <HashCode>AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAgAAAAAAAAAA=</HashCode>
+      <FileName>token.h</FileName>
+    </TypeIdentifier>
+  </Struct>
+  <Struct Name="FormatString">
+    <Position X="4.5" Y="6.25" Width="1.5" />
+    <TypeIdentifier>
+      <HashCode>AAAAAACAAAAAAAAAAAAAIAAAAAAAAIAAAAAAAAAAAAA=</HashCode>
+      <FileName>token.h</FileName>
+    </TypeIdentifier>
+  </Struct>
+  <Struct Name="MainToken">
+    <Position X="6.25" Y="6.25" Width="1.5" />
+    <TypeIdentifier>
+      <HashCode>AAAAAAAAAAAAAEAAAAAAAAAAAAAAAAAAAAAAAAAAAAA=</HashCode>
+      <FileName>token.h</FileName>
+    </TypeIdentifier>
+  </Struct>
+  <Struct Name="Frame">
+    <Position X="15" Y="3" Width="1.5" />
+    <TypeIdentifier>
+      <HashCode>AAAAAAAAAAAAAAAAAAAAAAAAAQAACIAAAAAAAAAAAAE=</HashCode>
+      <FileName>vm.h</FileName>
+    </TypeIdentifier>
+  </Struct>
+  <Enum Name="ErrorCode">
+    <Position X="13.25" Y="2.25" Width="1.5" />
+    <TypeIdentifier>
+      <HashCode>ABAAAAgAAAAAYABAAACQAAggAAAAAAAAwAAAAAAIAAg=</HashCode>
+      <FileName>error.h</FileName>
+    </TypeIdentifier>
+  </Enum>
+  <Enum Name="OpCode">
+    <Position X="15" Y="6.25" Width="1.5" />
+    <TypeIdentifier>
+      <HashCode>QAEHAACAACAAAAEAEACIBgIABAAACEAAQAAAAAAAAAE=</HashCode>
+      <FileName>opcode.h</FileName>
+    </TypeIdentifier>
+  </Enum>
+  <Enum Name="UnaryOpCode">
+    <Position X="18.5" Y="6.25" Width="1.5" />
+    <TypeIdentifier>
+      <HashCode>AAAAIAAAAAAAAgAAAAAAAAAAAAAAAAAAAAAAAAAAAAI=</HashCode>
+      <FileName>opcode.h</FileName>
+    </TypeIdentifier>
+  </Enum>
+  <Enum Name="BinaryOpCode">
+    <Position X="16.75" Y="6.25" Width="1.5" />
+    <TypeIdentifier>
+      <HashCode>AAAQEACACAAQAAgAAAAAAAACAAAAAAAAAAAACQEGAAA=</HashCode>
+      <FileName>opcode.h</FileName>
+    </TypeIdentifier>
+  </Enum>
+  <Enum Name="EmitMode">
+    <Position X="13.25" Y="9.25" Width="1.5" />
+    <TypeIdentifier>
+      <HashCode>AAAAAUAAAAAQAAAAQAAAAAAAAAAAAAAAAAAAAAAAEAA=</HashCode>
+      <FileName>parser.h</FileName>
+    </TypeIdentifier>
+  </Enum>
+  <Enum Name="TokenCode">
+    <Position X="9.75" Y="2.75" Width="1.5" />
+    <TypeIdentifier>
+      <HashCode>CAAAAIQAACUEKkAwgBAAAAIAWAgIDMQAACAAGAAEoIA=</HashCode>
+      <FileName>token_code.h</FileName>
+    </TypeIdentifier>
+  </Enum>
+  <Enum Name="TypeCode">
+    <Position X="13.25" Y="5.5" Width="1.5" />
+    <TypeIdentifier>
+      <HashCode>AgAAAQAAAAAAAAAAAAIgAAAAAAAIAAAAAAAAgAAAAAA=</HashCode>
+      <FileName>type_code.h</FileName>
+    </TypeIdentifier>
+  </Enum>
+  <Font Name="Microsoft YaHei UI" Size="9" />
+</ClassDiagram>
