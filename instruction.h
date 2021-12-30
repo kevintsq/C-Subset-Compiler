@@ -110,7 +110,7 @@ public:
 
     explicit StoreName(const ObjectP &object) : Instruction(NAME(STORE_NAME) "\t\t"), object(object) {
         IdentP i = object->ident_info;
-        if (object->ident_info != nullptr) {
+        if (i != nullptr) {
             switch (object->type) {
                 case INT:
                     name << i->name << "\t\t(INT, declared in line " << i->line << ')';
@@ -119,7 +119,7 @@ public:
                     name << i->name << "\t\t(INT_ARRAY, declared in line " << i->line << ')';
                     break;
                 default:
-                    ERROR_LIMITED_SUPPORT_WITH_LINE(object->ident_info->line, INT or INT_ARRAY assignment);
+                    ERROR_LIMITED_SUPPORT_WITH_LINE(i->line, INT or INT_ARRAY assignment);
             }
         }
     }
