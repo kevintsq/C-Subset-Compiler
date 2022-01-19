@@ -56,7 +56,12 @@ public:
     }
 
     inline bool has_type(const TokenIter &tk, TokenCode type) {
-        return tk < tokens.end() && (*tk)->token_type == type;
+        if (tk == tokens.end()) {
+            cerr << "unexpected EOF while parsing" << endl;
+            exit(-1);
+        } else {
+            return (*tk)->token_type == type;
+        }
     }
 
     static inline bool starts_with_decl(const TokenIter &tk) {
