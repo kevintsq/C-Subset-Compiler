@@ -1,0 +1,65 @@
+const int GROUPS_EACH_LINE = 10;
+const int GROUP_DIGITS = 5;
+const int ITER_SPAN = 18;
+
+int pow(int base, int exp) {
+    int result = base;
+    while (exp > 1) {
+        result = result * base;
+        exp = exp - 1;
+    }
+    return result;
+}
+
+void printw(int width, int n) {
+    int big = pow(10, width - 1);
+    while (n / big == 0) {
+        printf("0");
+        big = big / 10;
+    }
+    printf("%d", n);
+}
+
+int main() {
+    int group_boundary = pow(10, GROUP_DIGITS);
+    int max_output_digits;
+    max_output_digits = getint();
+    if (max_output_digits < 10) { max_output_digits = 10; }
+    int remainders_size = 4 * max_output_digits;
+    int output[max_output_digits], remainders[remainders_size + 1];
+    int i = 0, output_index = 0, lower_digits = 0;
+    while (i <= remainders_size) {
+        remainders[i] = 2;
+        i = i + 1;
+    }
+    i = remainders_size;
+    while (i > 0 && output_index < max_output_digits) {
+        // pi = 2 + 1/3 * (2 + 2/5 * (2 + 3/7 * (2 + ... (2 + k/(2k+1) * (2 + ...)) ...)))
+        int sum = 0, numerator = i, denominator = i * 2 - 1;
+        while (numerator > 0) {
+            sum = sum + remainders[numerator] * group_boundary;
+            remainders[numerator] = sum % denominator;
+            sum = sum / denominator;
+            sum = sum * numerator;
+            numerator = numerator - 1;
+            denominator = denominator - 2;
+        }
+        output[output_index] = lower_digits + sum / group_boundary;  // (sum / group_boundary) is upper_digits
+        output_index = output_index + 1;
+        lower_digits = sum % group_boundary;
+        i = i - ITER_SPAN;
+    }
+    printf("3.\n");
+    i = 1;
+    while (i * GROUP_DIGITS <= max_output_digits) {
+        printw(GROUP_DIGITS, output[i]);
+        if (i % GROUPS_EACH_LINE) { printf(" "); }
+        else { printf("\n"); }
+        i = i + 1;
+    }
+    int remainder = max_output_digits % GROUP_DIGITS;
+    if (remainder) {
+        printw(remainder, output[max_output_digits / GROUP_DIGITS + 1] / pow(10, GROUP_DIGITS - remainder));
+    }
+    return 0;
+}
