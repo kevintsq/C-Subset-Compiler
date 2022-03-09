@@ -36,9 +36,9 @@ jobs:
       run: msbuild /m /p:Configuration=${{env.BUILD_CONFIGURATION}} ${{env.SOLUTION_FILE_PATH}}
 
     - name: Run
-      working-directory: ${{env.GITHUB_WORKSPACE}}
-      run: tree
+      working-directory: ${{env.GITHUB_WORKSPACE}}/x64/${{env.BUILD_CONFIGURATION}}
+      run: echo 1000 | ./code
 
     - name: Test
-      working-directory: ${{env.GITHUB_WORKSPACE}}/bin/${{env.BUILD_CONFIGURATION}}
+      working-directory: ${{env.GITHUB_WORKSPACE}}/x64/${{env.BUILD_CONFIGURATION}}
       run: fc pcpderesults.txt pi.txt
