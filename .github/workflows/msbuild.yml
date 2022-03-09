@@ -37,7 +37,7 @@ jobs:
 
     - name: Run
       working-directory: D:\a\C-Subset-Compiler\C-Subset-Compiler\x64\${{env.BUILD_CONFIGURATION}}
-      run: echo 1000 | ./code
+      run: echo 1000 | .\code
 
     - name: Test
       working-directory: D:\a\C-Subset-Compiler\C-Subset-Compiler\x64\${{env.BUILD_CONFIGURATION}}
