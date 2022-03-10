@@ -41,4 +41,4 @@ jobs:
 
     - name: Test
       working-directory: D:\a\C-Subset-Compiler\C-Subset-Compiler\x64\${{env.BUILD_CONFIGURATION}}
-      run: diff (cat pcpderesults.txt) (cat pi.txt)
+      run: diff (cat pcoderesults.txt) (cat pi.txt)
