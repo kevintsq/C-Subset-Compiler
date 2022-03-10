@@ -40,4 +40,5 @@ jobs:
       run: echo 1000 | .\code
 
     - name: Test
-      run: diff (cat D:\a\C-Subset-Compiler\C-Subset-Compiler\x64\${{env.BUILD_CONFIGURATION}}\pcoderesults.txt) (cat D:\a\C-Subset-Compiler\C-Subset-Compiler\x64\${{env.BUILD_CONFIGURATION}}\pi.txt)
+      working-directory: D:\a\C-Subset-Compiler\C-Subset-Compiler\x64\${{env.BUILD_CONFIGURATION}}
+      run: cmd /c fc pcoderesult.txt pi.txt
