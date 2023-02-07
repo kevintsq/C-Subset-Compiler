@@ -25,7 +25,7 @@ int main() {
     int max_output_digits;
     max_output_digits = getint();
     if (max_output_digits < 10) { max_output_digits = 10; }
-    int remainders_size = 4 * max_output_digits;
+    int remainders_size = 5 * max_output_digits;
     int output[max_output_digits], remainders[remainders_size + 1];
     int i = 0, output_index = 0, lower_digits = 0;
     while (i <= remainders_size) {
