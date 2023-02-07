@@ -4,7 +4,7 @@
 
 #include "tokenizer.h"
 
-Tokenizer::Tokenizer(const char *filename, Error &error) {
+Tokenizer::Tokenizer(const string& filename, Error &error) {
 //    FILE *fp = fopen("testfile.txt", "rb");
 //    fseek(fp, 0, SEEK_END);
 //    long size = ftell(fp);
@@ -14,6 +14,10 @@ Tokenizer::Tokenizer(const char *filename, Error &error) {
 //    buffer[size] = '\0';
 //    fclose(fp);
     ifstream file(filename, std::ios::binary);
+    if (!file.is_open()) {
+        perror(("Failed to open source code file " + filename).c_str());
+        exit(EXIT_FAILURE);
+    }
     file.seekg(0, ifstream::end);
     long long size = file.tellg();
     file.seekg(ifstream::beg);
@@ -39,7 +43,7 @@ Tokenizer::Tokenizer(const char *filename, Error &error) {
             this->tokens.push_back(make_shared<SubToken>(line));
             buffer++;
         } else if ((number = strtol(current, &buffer, 10)) || current != buffer) {
-            // Must be after the leading 3!
+            // Must be after the leading 3! Expression cannot be simplified!
             this->tokens.push_back(make_shared<IntLiteral>(line, number));
         } else if (*buffer == '"') {
             int cnt = 0;
@@ -52,7 +56,7 @@ Tokenizer::Tokenizer(const char *filename, Error &error) {
                                          *buffer == '%' && *(buffer + 1) == 'd' ||
                                          *buffer != '\\' && '(' <= *buffer && *buffer <= '~')) {
                     if (is_valid) {
-                        error(ILLEGAL_CHAR, line);
+                        error(ErrorCode::ILLEGAL_CHAR, line);
                     }
                     is_valid = false;
                 }

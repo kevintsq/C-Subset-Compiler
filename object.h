@@ -26,7 +26,7 @@ public:
     bool is_global = false;
     IdentP ident_info;
 
-    explicit Object(TypeCode val_type = VOID) : type(val_type) {};
+    explicit Object(TypeCode val_type = TypeCode::VOID) : type(val_type) {};
 
     virtual inline ObjectP copy() const {
         return make_shared<Object>(*this);
@@ -45,7 +45,7 @@ class IntObject : public Object {
 public:
     int value = 0;
 
-    explicit IntObject(int value = 0) : Object(INT), value(value) {}
+    explicit IntObject(int value = 0) : Object(TypeCode::INT), value(value) {}
 
     inline ObjectP copy() const override {
         return make_shared<IntObject>(*this);
@@ -67,13 +67,13 @@ public:
     int dereference_cnt = 0;
     long long base = 0;
 
-    explicit ArrayObject(bool alloc = false) : Object(INT_ARRAY) {
+    explicit ArrayObject(bool alloc = false) : Object(TypeCode::INT_ARRAY) {
         if (alloc) {
             this->alloc();
         }
     }
 
-    explicit ArrayObject(long long size) : Object(INT_ARRAY) {
+    explicit ArrayObject(long long size) : Object(TypeCode::INT_ARRAY) {
         alloc(size);
     }
 
@@ -106,7 +106,7 @@ class StringObject : public Object {
 public:
     string value;
 
-    explicit StringObject(const char *start, long long length) : Object(CHAR_ARRAY) {
+    explicit StringObject(const char *start, long long length) : Object(TypeCode::CHAR_ARRAY) {
         value.assign(start, length);
     }
 
@@ -119,7 +119,7 @@ public:
     vector<ObjectP> params;
     long long code_offset = 0;
 
-    explicit FuncObject(TypeCode return_type) : Object(FUNCTION), return_type(return_type) {}
+    explicit FuncObject(TypeCode return_type) : Object(TypeCode::FUNCTION), return_type(return_type) {}
 
     inline ObjectP copy() const override { return make_shared<FuncObject>(*this); }
 };

@@ -8,11 +8,11 @@ void StackMachine::run() {
     auto pc = instructions.begin();
     while (pc < instructions.end()) {
         switch ((*pc)->opcode) {
-            case LOAD_FAST:
+            case OpCode::LOAD_FAST:
                 stack->push_back(cast<LoadFast>(*pc)->object);
                 ++pc;
                 break;
-            case LOAD_NAME: {
+            case OpCode::LOAD_NAME: {
                 ObjectP info = cast<LoadName>(*pc)->object;
                 if (info->is_global) {
                     stack->push_back(globals[info->ident_info->name]);
@@ -32,20 +32,20 @@ void StackMachine::run() {
                 ++pc;
                 break;
             }
-            case STORE_NAME: {
+            case OpCode::STORE_NAME: {
                 ObjectP o = cast<StoreName>(*pc)->object;
                 auto &name = o->ident_info->name;
                 auto &locals = frames.back()->objects;
                 if (o->is_const) {
                     ERROR_NOT_SUPPORTED(modifing const);
                 } else if (o->is_global) {
-                    if (o->type == INT_ARRAY) {
+                    if (o->type == TypeCode::INT_ARRAY) {
                         cast<ArrayObject>(globals[name])->data = cast<ArrayObject>(stack->back())->data;
                     } else {
                         globals[name] = stack->back()->copy();  // replace store, must be copied
                     }
                 } else {
-                    if (o->type == INT_ARRAY) {
+                    if (o->type == TypeCode::INT_ARRAY) {
                         cast<ArrayObject>(stack->back())->dims = cast<ArrayObject>(o)->dims;
                     }  // dim of array on stack may be unknown, so we need to copy them
                     locals[o->ident_info] = stack->back()->copy();  // replace store, must be copied
@@ -54,11 +54,11 @@ void StackMachine::run() {
                 ++pc;
                 break;
             }
-            case POP_TOP:
+            case OpCode::POP_TOP:
                 stack->pop_back();
                 ++pc;
                 break;
-            case BUILD_ARRAY: {
+            case OpCode::BUILD_ARRAY: {
                 long long size = cast<IntObject>(stack->back())->value;
                 stack->pop_back();
                 ArrayObjectP array = make_shared<ArrayObject>(size);
@@ -69,7 +69,7 @@ void StackMachine::run() {
                 ++pc;
                 break;
             }
-            case INIT_ARRAY: {
+            case OpCode::INIT_ARRAY: {
                 ArrayObjectP array = make_shared<ArrayObject>((long long) stack->size());
                 // not safe to use `*array->data = *stack` because stack size may be smaller than the array size
                 // shouldn't use `insert` because zeros are not overwritten
@@ -83,7 +83,7 @@ void StackMachine::run() {
                 ++pc;
                 break;
             }
-            case STORE_SUBSCR: {
+            case OpCode::STORE_SUBSCR: {
                 auto value = cast<IntObject>(stack->back())->value;
                 stack->pop_back();
                 cast<IntObject>(stack->back())->value = value;  // in-place store, must not be copied
@@ -91,7 +91,7 @@ void StackMachine::run() {
                 ++pc;
                 break;
             }
-            case SUBSCR_ARRAY: {
+            case OpCode::SUBSCR_ARRAY: {
                 long long index = cast<IntObject>(stack->back())->value;
                 stack->pop_back();
                 ArrayObjectP array = cast<ArrayObject>(stack->back());
@@ -100,17 +100,17 @@ void StackMachine::run() {
                 ++pc;
                 break;
             }
-            case CALL_GETINT: {
+            case OpCode::CALL_GETINT: {
                 int n;
                 cin >> n;
                 stack->push_back(make_shared<IntObject>(n));
                 ++pc;
                 break;
             }
-            case JUMP_ABSOLUTE:
+            case OpCode::JUMP_ABSOLUTE:
                 pc = instructions.begin() + cast<JumpAbsolute>(*pc)->get_offset();
                 break;
-            case POP_JUMP_IF_FALSE: {
+            case OpCode::POP_JUMP_IF_FALSE: {
                 long long value = cast<IntObject>(stack->back())->value;
                 stack->pop_back();
                 if (!value) {
@@ -120,7 +120,7 @@ void StackMachine::run() {
                 }
                 break;
             }
-            case POP_JUMP_IF_TRUE: {
+            case OpCode::POP_JUMP_IF_TRUE: {
                 long long value = cast<IntObject>(stack->back())->value;
                 stack->pop_back();
                 if (value) {
@@ -130,7 +130,7 @@ void StackMachine::run() {
                 }
                 break;
             }
-            case CALL_PRINTF: {
+            case OpCode::CALL_PRINTF: {
                 FormatStringP fmt_str = cast<PrintF>(*pc)->format_string;
                 auto seg_it = fmt_str->segments.begin();
                 outs << *seg_it;
@@ -143,9 +143,9 @@ void StackMachine::run() {
                 ++pc;
                 break;
             }
-            case EXIT_INTERP:
+            case OpCode::EXIT_INTERP:
                 return;
-            case CALL_FUNCTION: {
+            case OpCode::CALL_FUNCTION: {
                 FrameP new_frame = make_shared<Frame>();
                 new_frame->return_offset = pc - instructions.begin() + 1;
                 FuncObjectP func = cast<CallFunction>(*pc)->get_func();
@@ -153,10 +153,10 @@ void StackMachine::run() {
                 for (auto i = (long long) params.size() - 1; i >= 0; i--) {
                     ObjectP o = stack->back();
                     switch (o->type) {
-                        case INT:
+                        case TypeCode::INT:
                             new_frame->objects[params[i]->ident_info] = cast<IntObject>(o)->copy();
                             break;
-                        case INT_ARRAY: {
+                        case TypeCode::INT_ARRAY: {
                             ArrayObjectP array = cast<ArrayObject>(o->copy());
                             new_frame->objects[params[i]->ident_info] = array;
                             array->dims = cast<ArrayObject>(params[i])->dims;
@@ -172,7 +172,7 @@ void StackMachine::run() {
                 pc = instructions.begin() + func->code_offset;
                 break;
             }
-            case RETURN_VALUE: {
+            case OpCode::RETURN_VALUE: {
                 if (!stack->empty()) {
                     assert(stack->size() == 1);
                     ObjectP value = stack->back();
@@ -191,14 +191,14 @@ void StackMachine::run() {
                 }
                 break;
             }
-            case UNARY_OP: {
+            case OpCode::UNARY_OP: {
                 auto value = cast<IntObject>(stack->back())->value;
                 stack->pop_back();
                 stack->push_back(make_shared<IntObject>(util::unary_operation(cast<UnaryOperation>(*pc)->unary_opcode, value)));
                 ++pc;
                 break;
             }
-            case BINARY_OP: {
+            case OpCode::BINARY_OP: {
                 auto right = cast<IntObject>(stack->back())->value;
                 stack->pop_back();
                 auto left = cast<IntObject>(stack->back())->value;

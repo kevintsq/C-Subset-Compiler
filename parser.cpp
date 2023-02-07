@@ -26,7 +26,7 @@ void Parser::parse_comp_unit(TokenIter &tk) {
     while (starts_with_func_def(tk)) {
         parse_func_def(tk);
     }
-    if ((*tk)->token_type == INTTK) {
+    if ((*tk)->token_type == TokenCode::INTTK) {
         parse_main_func_def(tk);
     }
     elements.push_back(make_shared<CompUnit>());
@@ -35,10 +35,10 @@ void Parser::parse_comp_unit(TokenIter &tk) {
 void Parser::parse_decl(TokenIter &tk, int nest_level) {
     // Decl -> ConstDecl | VarDecl
     switch ((*tk)->token_type) {
-        case CONSTTK:
+        case TokenCode::CONSTTK:
             parse_const_decl(tk, nest_level);
             break;
-        case INTTK:
+        case TokenCode::INTTK:
             parse_var_decl(tk, nest_level);
             break;
         default:
@@ -48,25 +48,25 @@ void Parser::parse_decl(TokenIter &tk, int nest_level) {
 
 void Parser::parse_const_decl(TokenIter &tk, int nest_level) {
     // ConstDecl -> 'const' BType ConstDef { ',' ConstDef } ';'
-    if ((*tk)->token_type == CONSTTK) {
+    if ((*tk)->token_type == TokenCode::CONSTTK) {
         elements.push_back(*tk++);
     } else {
         ERROR_EXPECTED_GOT(CONSTTK, tk);
     }
-    if ((*tk)->token_type == INTTK) {
+    if ((*tk)->token_type == TokenCode::INTTK) {
         elements.push_back(*tk++);
     } else {
         ERROR_EXPECTED_GOT(INTTK, tk);
     }
     while (tk < tokens.end()) {
         parse_const_def(tk, nest_level);
-        if ((*tk)->token_type == COMMA) {
+        if ((*tk)->token_type == TokenCode::COMMA) {
             elements.push_back(*tk++);
-        } else if ((*tk)->token_type == SEMICN) {
+        } else if ((*tk)->token_type == TokenCode::SEMICN) {
             elements.push_back(*tk++);
             break;
         } else {
-            error(MISSING_SEMICN, (*(tk - 1))->line);
+            error(ErrorCode::MISSING_SEMICN, (*(tk - 1))->line);
             break;
         }
     }
@@ -77,18 +77,18 @@ ObjectP Parser::check_ident_valid_decl(TokenIter &tk, TypeCode type,
                                        bool is_global = false, bool is_const = false, bool is_func = false) {
     ObjectP result;
     switch (type) {
-        case VOID:
+        case TypeCode::VOID:
             assert(is_func);
-            result = make_shared<FuncObject>(VOID);
+            result = make_shared<FuncObject>(TypeCode::VOID);
             break;
-        case INT:
+        case TypeCode::INT:
             if (is_func) {
-                result = make_shared<FuncObject>(INT);
+                result = make_shared<FuncObject>(TypeCode::INT);
             } else {
                 result = make_shared<IntObject>();
             }
             break;
-        case INT_ARRAY: {
+        case TypeCode::INT_ARRAY: {
             assert(!is_func);
             result = make_shared<ArrayObject>();
             break;
@@ -104,7 +104,7 @@ ObjectP Parser::check_ident_valid_decl(TokenIter &tk, TypeCode type,
         result->ident_info = current;
         last_table[current->name] = result;
     } else {
-        error(IDENT_REDEFINED, current->line);
+        error(ErrorCode::IDENT_REDEFINED, current->line);
     }
     elements.push_back(*tk++);
     return result;
@@ -115,27 +115,27 @@ void Parser::parse_const_def(TokenIter &tk, int nest_level) {
     ObjectP current;
     ArrayObjectP array;
     bool is_array;
-    if ((*tk)->token_type == IDENFR) {
-        is_array = has_type(tk + 1, LBRACK);
+    if ((*tk)->token_type == TokenCode::IDENFR) {
+        is_array = has_type(tk + 1, TokenCode::LBRACK);
         if (is_array) {
-            current = check_ident_valid_decl(tk, INT_ARRAY, nest_level == 0, true);
+            current = check_ident_valid_decl(tk, TypeCode::INT_ARRAY, nest_level == 0, true);
             array = cast<ArrayObject>(current);
         } else {
-            current = check_ident_valid_decl(tk, INT, nest_level == 0, true);
+            current = check_ident_valid_decl(tk, TypeCode::INT, nest_level == 0, true);
         }
     } else {
         ERROR_EXPECTED_GOT(IDENFR, tk);
     }
-    while (has_type(tk, LBRACK)) {
+    while (has_type(tk, TokenCode::LBRACK)) {
         elements.push_back(*tk++);
         array->dims.push_back(cast<IntObject>(parse_expr<ConstExpr>(tk, NO_EMIT_IN_CONST_DEF))->value);
-        if ((*tk)->token_type == RBRACK) {
+        if ((*tk)->token_type == TokenCode::RBRACK) {
             elements.push_back(*tk++);
         } else {
-            error(MISSING_RBRACK, (*(tk - 1))->line);
+            error(ErrorCode::MISSING_RBRACK, (*(tk - 1))->line);
         }
     }
-    if ((*tk)->token_type == ASSIGN) {
+    if ((*tk)->token_type == TokenCode::ASSIGN) {
         elements.push_back(*tk++);
         ObjectP init_val = parse_init_val<ConstExpr, ConstInitVal>(tk, NO_EMIT_IN_CONST_DEF);
         if (is_array) {
@@ -153,20 +153,20 @@ void Parser::parse_const_def(TokenIter &tk, int nest_level) {
 
 void Parser::parse_var_decl(TokenIter &tk, int nest_level) {
     // VarDecl -> BType VarDef { ',' VarDef } ';'
-    if ((*tk)->token_type == INTTK) {
+    if ((*tk)->token_type == TokenCode::INTTK) {
         elements.push_back(*tk++);
     } else {
         ERROR_EXPECTED_GOT(INTTK, tk);
     }
     while (tk < tokens.end()) {
         parse_var_def(tk, nest_level);
-        if ((*tk)->token_type == COMMA) {
+        if ((*tk)->token_type == TokenCode::COMMA) {
             elements.push_back(*tk++);
-        } else if ((*tk)->token_type == SEMICN) {
+        } else if ((*tk)->token_type == TokenCode::SEMICN) {
             elements.push_back(*tk++);
             break;
         } else {
-            error(MISSING_SEMICN, (*(tk - 1))->line);
+            error(ErrorCode::MISSING_SEMICN, (*(tk - 1))->line);
             break;
         }
     }
@@ -178,34 +178,34 @@ void Parser::parse_var_def(TokenIter &tk, int nest_level) {
     ObjectP current;
     ArrayObjectP array;
     bool is_array;
-    if ((*tk)->token_type == IDENFR) {
-        is_array = has_type(tk + 1, LBRACK);
+    if ((*tk)->token_type == TokenCode::IDENFR) {
+        is_array = has_type(tk + 1, TokenCode::LBRACK);
         if (is_array) {
-            current = check_ident_valid_decl(tk, INT_ARRAY, nest_level == 0);
+            current = check_ident_valid_decl(tk, TypeCode::INT_ARRAY, nest_level == 0);
             array = cast<ArrayObject>(current);
         } else {
-            current = check_ident_valid_decl(tk, INT, nest_level == 0);
+            current = check_ident_valid_decl(tk, TypeCode::INT, nest_level == 0);
         }
     } else {
         ERROR_EXPECTED_GOT(IDENFR, tk);
     }
-    while (has_type(tk, LBRACK)) {
+    while (has_type(tk, TokenCode::LBRACK)) {
         elements.push_back(*tk++);
         array->dims.push_back(cast<IntObject>(parse_expr<ConstExpr>(tk, EMIT_IN_VAR_DEF))->value);
-        if ((*tk)->token_type == RBRACK) {
+        if ((*tk)->token_type == TokenCode::RBRACK) {
             elements.push_back(*tk++);
             if (array->dims.size() > 1) {
-                instructions.push_back(make_shared<BinaryOperation>(BINARY_MUL));
+                instructions.push_back(make_shared<BinaryOperation>(BinaryOpCode::BINARY_MUL));
             }
         } else {
-            error(MISSING_RBRACK, (*(tk - 1))->line);
+            error(ErrorCode::MISSING_RBRACK, (*(tk - 1))->line);
         }
     }
     if (is_array) {
         instructions.push_back(make_shared<BuildArray>());
         instructions.push_back(make_shared<StoreName>(array));
     }
-    if ((*tk)->token_type == ASSIGN) {
+    if ((*tk)->token_type == TokenCode::ASSIGN) {
         elements.push_back(*tk++);
         parse_init_val<NormalExpr, InitVal>(tk, EMIT_IN_NORM_STMT);
         if (is_array) {
@@ -223,20 +223,20 @@ ObjectP Parser::parse_init_val(TokenIter &tk, EmitMode emit_mode) {
     // InitVal -> Exp | '{' [ InitVal { ',' InitVal } ] '}'
     // ConstInitVal -> ConstExp | '{' [ ConstInitVal { ',' ConstInitVal } ] '}'
     ObjectP result;
-    if ((*tk)->token_type == LBRACE) {
+    if ((*tk)->token_type == TokenCode::LBRACE) {
         elements.push_back(*tk++);
         ArrayObjectP array = make_shared<ArrayObject>(true);
-        if ((*tk)->token_type != RBRACE) {
+        if ((*tk)->token_type != TokenCode::RBRACE) {
             while (tk < tokens.end()) {
                 ObjectP o = parse_init_val<ExprT, ElementT>(tk, emit_mode);
-                if (emit_mode == NO_EMIT_IN_CONST_DEF && o->type == INT_ARRAY) {
+                if (emit_mode == NO_EMIT_IN_CONST_DEF && o->type == TypeCode::INT_ARRAY) {
                     // `emit_mode` is tested for nested array support maybe in the future
                     ArrayObjectP tmp = cast<ArrayObject>(o);
                     array->data->insert(array->data->end(), tmp->data->begin(), tmp->data->end());
                 } else {
                     array->data->push_back(o);
                 }
-                if ((*tk)->token_type == COMMA) {
+                if ((*tk)->token_type == TokenCode::COMMA) {
                     elements.push_back(*tk++);
                 } else {
                     break;
@@ -244,7 +244,7 @@ ObjectP Parser::parse_init_val(TokenIter &tk, EmitMode emit_mode) {
             }
         }
         result = array;
-        if ((*tk)->token_type == RBRACE) {
+        if ((*tk)->token_type == TokenCode::RBRACE) {
             elements.push_back(*tk++);
         } else {
             ERROR_EXPECTED_GOT(COMMA or RBRACE, tk);
@@ -260,32 +260,32 @@ void Parser::parse_func_def(TokenIter &tk) {
     // FuncDef -> FuncType Ident '(' [FuncFParams] ')' Block
     current_func_return_type = parse_func_type(tk);
     FuncObjectP current;
-    if ((*tk)->token_type == IDENFR) {
+    if ((*tk)->token_type == TokenCode::IDENFR) {
         current = cast<FuncObject>(check_ident_valid_decl(tk, current_func_return_type, true, false, true));
         current->code_offset = (long long) instructions.size();
     } else {
         ERROR_EXPECTED_GOT(IDENFR, tk);
     }
-    if ((*tk)->token_type == LPARENT) {
+    if ((*tk)->token_type == TokenCode::LPARENT) {
         elements.push_back(*tk++);
     } else {
         ERROR_EXPECTED_GOT(LPARENT, tk);
     }
     sym_table.emplace_back();
-    if ((*tk)->token_type == INTTK) {  // pre-fetch
+    if ((*tk)->token_type == TokenCode::INTTK) {  // pre-fetch
         parse_func_formal_params(tk, current);
     }
-    if ((*tk)->token_type == RPARENT) {
+    if ((*tk)->token_type == TokenCode::RPARENT) {
         elements.push_back(*tk++);
     } else {
-        error(MISSING_RPAREN, (*(tk - 1))->line);
+        error(ErrorCode::MISSING_RPAREN, (*(tk - 1))->line);
     }
     parse_block(tk, 1, true);
     if (!has_return_at_end) {
-        if (current_func_return_type == VOID) {
+        if (current_func_return_type == TypeCode::VOID) {
             instructions.push_back(make_shared<ReturnValue>());
         } else {
-            error(MISSING_RETURN, (*(tk - 1))->line);
+            error(ErrorCode::MISSING_RETURN, (*(tk - 1))->line);
         }
     }
     has_return_at_end = false;
@@ -294,13 +294,13 @@ void Parser::parse_func_def(TokenIter &tk) {
 
 void Parser::parse_main_func_def(TokenIter &tk) {
     // MainFuncDef -> 'int' 'main' '(' ')' Block
-    if ((*tk)->token_type == INTTK) {
-        current_func_return_type = INT;
+    if ((*tk)->token_type == TokenCode::INTTK) {
+        current_func_return_type = TypeCode::INT;
         elements.push_back(*tk++);
     } else {
         ERROR_EXPECTED_GOT(INTTK, tk);
     }
-    if ((*tk)->token_type == MAINTK) {
+    if ((*tk)->token_type == TokenCode::MAINTK) {
         FuncObjectP main = cast<FuncObject>(*tk);
         main->code_offset = (long long) instructions.size();
         cast<CallFunction>(entry_inst)->set_func(main);
@@ -308,19 +308,19 @@ void Parser::parse_main_func_def(TokenIter &tk) {
     } else {
         ERROR_EXPECTED_GOT(MAINTK, tk);
     }
-    if ((*tk)->token_type == LPARENT) {
+    if ((*tk)->token_type == TokenCode::LPARENT) {
         elements.push_back(*tk++);
     } else {
         ERROR_EXPECTED_GOT(LPARENT, tk);
     }
-    if ((*tk)->token_type == RPARENT) {
+    if ((*tk)->token_type == TokenCode::RPARENT) {
         elements.push_back(*tk++);
     } else {
-        error(MISSING_RPAREN, (*(tk - 1))->line);
+        error(ErrorCode::MISSING_RPAREN, (*(tk - 1))->line);
     }
     parse_block(tk, 1);
     if (!has_return_at_end) {
-        error(MISSING_RETURN, (*(tk - 1))->line);
+        error(ErrorCode::MISSING_RETURN, (*(tk - 1))->line);
     }
     elements.push_back(make_shared<MainFuncDef>());
 }
@@ -328,10 +328,10 @@ void Parser::parse_main_func_def(TokenIter &tk) {
 TypeCode Parser::parse_func_type(TokenIter &tk) {
     // FuncType -> 'void' | 'int'
     TypeCode result;
-    if ((*tk)->token_type == INTTK) {
-        result = INT;
-    } else if ((*tk)->token_type == VOIDTK) {
-        result = VOID;
+    if ((*tk)->token_type == TokenCode::INTTK) {
+        result = TypeCode::INT;
+    } else if ((*tk)->token_type == TokenCode::VOIDTK) {
+        result = TypeCode::VOID;
     } else {
         ERROR_EXPECTED_GOT(INTTK or VOIDTK, tk);
     }
@@ -344,7 +344,7 @@ void Parser::parse_func_formal_params(TokenIter &tk, FuncObjectP &func) {
     // FuncFParams -> FuncFParam { ',' FuncFParam }
     while (tk < tokens.end()) {
         parse_func_formal_param(tk, func);
-        if ((*tk)->token_type == COMMA) {
+        if ((*tk)->token_type == TokenCode::COMMA) {
             elements.push_back(*tk++);
         } else {
             break;
@@ -355,38 +355,38 @@ void Parser::parse_func_formal_params(TokenIter &tk, FuncObjectP &func) {
 
 void Parser::parse_func_formal_param(TokenIter &tk, FuncObjectP &func) {
     // FuncFParam -> BType Ident ['[' ']' { '[' ConstExp ']' }]
-    if ((*tk)->token_type == INTTK) {
+    if ((*tk)->token_type == TokenCode::INTTK) {
         elements.push_back(*tk++);
     } else {
         ERROR_EXPECTED_GOT(INTTK, tk);
     }
     ObjectP current;
     ArrayObjectP array;
-    if ((*tk)->token_type == IDENFR) {
-        if (has_type(tk + 1, LBRACK)) {
-            current = check_ident_valid_decl(tk, INT_ARRAY);
+    if ((*tk)->token_type == TokenCode::IDENFR) {
+        if (has_type(tk + 1, TokenCode::LBRACK)) {
+            current = check_ident_valid_decl(tk, TypeCode::INT_ARRAY);
             array = cast<ArrayObject>(current);
         } else {
-            current = check_ident_valid_decl(tk, INT);
+            current = check_ident_valid_decl(tk, TypeCode::INT);
         }
     } else {
         ERROR_EXPECTED_GOT(IDENFR, tk);
     }
-    if ((*tk)->token_type == LBRACK) {
+    if ((*tk)->token_type == TokenCode::LBRACK) {
         elements.push_back(*tk++);
-        if ((*tk)->token_type == RBRACK) {
+        if ((*tk)->token_type == TokenCode::RBRACK) {
             elements.push_back(*tk++);
             array->dims.push_back(0);  // dummy dimension for int a[]
         } else {
-            error(MISSING_RBRACK, (*(tk - 1))->line);
+            error(ErrorCode::MISSING_RBRACK, (*(tk - 1))->line);
         }
-        while (has_type(tk, LBRACK)) {
+        while (has_type(tk, TokenCode::LBRACK)) {
             elements.push_back(*tk++);
             array->dims.push_back(cast<IntObject>(parse_expr<ConstExpr>(tk, NO_EMIT_IN_FPARAMS))->value);
-            if ((*tk)->token_type == RBRACK) {
+            if ((*tk)->token_type == TokenCode::RBRACK) {
                 elements.push_back(*tk++);
             } else {
-                error(MISSING_RBRACK, (*(tk - 1))->line);
+                error(ErrorCode::MISSING_RBRACK, (*(tk - 1))->line);
             }
         }
     }
@@ -396,7 +396,7 @@ void Parser::parse_func_formal_param(TokenIter &tk, FuncObjectP &func) {
 
 void Parser::parse_block(TokenIter &tk, int nest_level, bool from_func_def) {
     // Block -> '{' { BlockItem } '}'
-    if ((*tk)->token_type == LBRACE) {
+    if ((*tk)->token_type == TokenCode::LBRACE) {
         elements.push_back(*tk++);
     } else {
         ERROR_EXPECTED_GOT(LBRACE, tk);
@@ -407,7 +407,7 @@ void Parser::parse_block(TokenIter &tk, int nest_level, bool from_func_def) {
     while (tk < tokens.end() && (starts_with_decl(tk) || starts_with_stmt(tk))) {  // pre-fetch
         parse_block_item(tk, nest_level);
     }
-    if ((*tk)->token_type == RBRACE) {
+    if ((*tk)->token_type == TokenCode::RBRACE) {
         elements.push_back(*tk++);
     } else {
         ERROR_EXPECTED_GOT(RBRACE, tk);
@@ -439,30 +439,30 @@ void Parser::parse_stmt(TokenIter &tk, int nest_level) {
     // | 'printf' '(' FormatString { "," Exp } ')' ';'
     has_return_at_end = false;
     switch ((*tk)->token_type) {
-        case IDENFR: {
-            bool no_assign = true, is_indexed = has_type(tk + 1, LBRACK);
-            for (auto p = tk + 1; p < tokens.end() && (*p)->token_type != SEMICN; ++p) {
-                if ((*p)->token_type == ASSIGN) {
+        case TokenCode::IDENFR: {
+            bool no_assign = true, is_indexed = has_type(tk + 1, TokenCode::LBRACK);
+            for (auto p = tk + 1; p < tokens.end() && (*p)->token_type != TokenCode::SEMICN; ++p) {
+                if ((*p)->token_type == TokenCode::ASSIGN) {
                     no_assign = false;
                     ObjectP lvalue = parse_lvalue(tk, EMIT_IN_NORM_STMT, true);  // pre-fetch
-                    if ((*tk)->token_type == ASSIGN) {
+                    if ((*tk)->token_type == TokenCode::ASSIGN) {
                         elements.push_back(*tk++);
                     } else {
                         // error(MISSING_SEMICN, (*(tk - 1))->line);
                         break;
                     }
-                    if ((*tk)->token_type == GETINTTK) {
+                    if ((*tk)->token_type == TokenCode::GETINTTK) {
                         elements.push_back(*tk++);
-                        if ((*tk)->token_type == LPARENT) {
+                        if ((*tk)->token_type == TokenCode::LPARENT) {
                             elements.push_back(*tk++);
                         } else {
                             ERROR_EXPECTED_GOT(LPARENT, tk);
                         }
-                        if ((*tk)->token_type == RPARENT) {
+                        if ((*tk)->token_type == TokenCode::RPARENT) {
                             elements.push_back(*tk++);
                             instructions.push_back(make_shared<GetInt>());
                         } else {
-                            error(MISSING_RPAREN, (*(tk - 1))->line);
+                            error(ErrorCode::MISSING_RPAREN, (*(tk - 1))->line);
                         }
                     } else {
                         parse_expr<NormalExpr>(tk, EMIT_IN_NORM_STMT);  // pre-fetch
@@ -479,22 +479,22 @@ void Parser::parse_stmt(TokenIter &tk, int nest_level) {
                 parse_expr<NormalExpr>(tk, EMIT_IN_NORM_STMT);  // pre-fetch
                 instructions.push_back(make_shared<PopTop>());
             }
-            if ((*tk)->token_type == SEMICN) {
+            if ((*tk)->token_type == TokenCode::SEMICN) {
                 elements.push_back(*tk++);
             } else {
-                error(MISSING_SEMICN, (*(tk - 1))->line);
+                error(ErrorCode::MISSING_SEMICN, (*(tk - 1))->line);
             }
             break;
         }
-        case SEMICN:
+        case TokenCode::SEMICN:
             elements.push_back(*tk++);
             break;
-        case LBRACE:
+        case TokenCode::LBRACE:
             parse_block(tk, nest_level + 1);  // pre-fetch
             break;
-        case IFTK: {
+        case TokenCode::IFTK: {
             elements.push_back(*tk++);
-            if ((*tk)->token_type == LPARENT) {
+            if ((*tk)->token_type == TokenCode::LPARENT) {
                 elements.push_back(*tk++);
             } else {
                 ERROR_EXPECTED_GOT(LPARENT, tk);
@@ -502,14 +502,14 @@ void Parser::parse_stmt(TokenIter &tk, int nest_level) {
             vector<JumpInstructionP> eval_jump_instructions;
             vector<JumpInstructionP> control_jump_instructions;
             parse_cond_expr(tk, EMIT_IN_COND_STMT, eval_jump_instructions, &control_jump_instructions);
-            if ((*tk)->token_type == RPARENT) {
+            if ((*tk)->token_type == TokenCode::RPARENT) {
                 elements.push_back(*tk++);
             } else {
-                error(MISSING_RPAREN, (*(tk - 1))->line);
+                error(ErrorCode::MISSING_RPAREN, (*(tk - 1))->line);
             }
             relocate_jump_instructions(eval_jump_instructions);
             parse_stmt(tk, nest_level + 1);
-            if ((*tk)->token_type == ELSETK) {
+            if ((*tk)->token_type == TokenCode::ELSETK) {
                 elements.push_back(*tk++);
                 auto ja = make_shared<JumpAbsolute>();
                 instructions.push_back(ja);
@@ -521,10 +521,10 @@ void Parser::parse_stmt(TokenIter &tk, int nest_level) {
             }
             break;
         }
-        case WHILETK: {
+        case TokenCode::WHILETK: {
             loop_info.emplace_back((long long) instructions.size());
             elements.push_back(*tk++);
-            if ((*tk)->token_type == LPARENT) {
+            if ((*tk)->token_type == TokenCode::LPARENT) {
                 elements.push_back(*tk++);
             } else {
                 ERROR_EXPECTED_GOT(LPARENT, tk);
@@ -533,10 +533,10 @@ void Parser::parse_stmt(TokenIter &tk, int nest_level) {
             vector<JumpInstructionP> eval_jump_instructions;
             vector<JumpInstructionP> control_jump_instructions;
             parse_cond_expr(tk, EMIT_IN_COND_STMT, eval_jump_instructions, &control_jump_instructions);
-            if ((*tk)->token_type == RPARENT) {
+            if ((*tk)->token_type == TokenCode::RPARENT) {
                 elements.push_back(*tk++);
             } else {
-                error(MISSING_RPAREN, (*(tk - 1))->line);
+                error(ErrorCode::MISSING_RPAREN, (*(tk - 1))->line);
             }
             relocate_jump_instructions(eval_jump_instructions);
             parse_stmt(tk, nest_level + 1);
@@ -546,85 +546,85 @@ void Parser::parse_stmt(TokenIter &tk, int nest_level) {
             loop_info.pop_back();
             break;
         }
-        case BREAKTK:
+        case TokenCode::BREAKTK:
             if (loop_info.empty()) {
-                error(BREAK_CONTINUE_NOT_IN_LOOP, (*tk)->line);
+                error(ErrorCode::BREAK_CONTINUE_NOT_IN_LOOP, (*tk)->line);
             } else {
                 auto ja = make_shared<JumpAbsolute>();
                 instructions.push_back(ja);
                 loop_info.back().break_instructions.push_back(ja);
             }
             elements.push_back(*tk++);
-            if ((*tk)->token_type == SEMICN) {
+            if ((*tk)->token_type == TokenCode::SEMICN) {
                 elements.push_back(*tk++);
             } else {
-                error(MISSING_SEMICN, (*(tk - 1))->line);
+                error(ErrorCode::MISSING_SEMICN, (*(tk - 1))->line);
             }
             break;
-        case CONTINUETK:
+        case TokenCode::CONTINUETK:
             if (loop_info.empty()) {
-                error(BREAK_CONTINUE_NOT_IN_LOOP, (*tk)->line);
+                error(ErrorCode::BREAK_CONTINUE_NOT_IN_LOOP, (*tk)->line);
             } else {
                 instructions.push_back(make_shared<JumpAbsolute>(loop_info.back().start));
             }
             elements.push_back(*tk++);
-            if ((*tk)->token_type == SEMICN) {
+            if ((*tk)->token_type == TokenCode::SEMICN) {
                 elements.push_back(*tk++);
             } else {
-                error(MISSING_SEMICN, (*(tk - 1))->line);
+                error(ErrorCode::MISSING_SEMICN, (*(tk - 1))->line);
             }
             break;
-        case RETURNTK:
+        case TokenCode::RETURNTK:
             elements.push_back(*tk++);
             if (starts_with_expr(tk)) {
-                if (current_func_return_type == VOID) {
-                    error(RETURN_TYPE_MISMATCH, (*(tk - 1))->line);
+                if (current_func_return_type == TypeCode::VOID) {
+                    error(ErrorCode::RETURN_TYPE_MISMATCH, (*(tk - 1))->line);
                 }
                 parse_expr<NormalExpr>(tk, EMIT_IN_NORM_STMT);
             }
-            if ((*tk)->token_type == SEMICN) {
+            if ((*tk)->token_type == TokenCode::SEMICN) {
                 elements.push_back(*tk++);
             } else {
-                error(MISSING_SEMICN, (*(tk - 1))->line);
+                error(ErrorCode::MISSING_SEMICN, (*(tk - 1))->line);
             }
-            if (nest_level == 1 && (*tk)->token_type == RBRACE) {
+            if (nest_level == 1 && (*tk)->token_type == TokenCode::RBRACE) {
                 has_return_at_end = true;
             }
             instructions.push_back(make_shared<ReturnValue>());
             break;
-        case PRINTFTK: {
+        case TokenCode::PRINTFTK: {
             TokenP p = *tk;
             elements.push_back(*tk++);
-            if ((*tk)->token_type == LPARENT) {
+            if ((*tk)->token_type == TokenCode::LPARENT) {
                 elements.push_back(*tk++);
             } else {
                 ERROR_EXPECTED_GOT(LPARENT, tk);
             }
             int fmt_char_cnt;
             FormatStringP fmt_str = cast<FormatString>(*tk);
-            if ((*tk)->token_type == STRCON) {
+            if ((*tk)->token_type == TokenCode::STRCON) {
                 fmt_char_cnt = fmt_str->fmt_char_cnt;
                 elements.push_back(*tk++);
             } else {
                 ERROR_EXPECTED_GOT(STRCON, tk);
             }
             int cnt;
-            for (cnt = 0; has_type(tk, COMMA); cnt++) {
+            for (cnt = 0; has_type(tk, TokenCode::COMMA); cnt++) {
                 elements.push_back(*tk++);
                 parse_expr<NormalExpr>(tk, EMIT_IN_NORM_STMT);
             }
             if (cnt != fmt_char_cnt) {
-                error(FORMAT_STRING_ARGUMENT_MISMATCH, p->line);
+                error(ErrorCode::FORMAT_STRING_ARGUMENT_MISMATCH, p->line);
             }
-            if ((*tk)->token_type == RPARENT) {
+            if ((*tk)->token_type == TokenCode::RPARENT) {
                 elements.push_back(*tk++);
             } else {
-                error(MISSING_RPAREN, (*(tk - 1))->line);
+                error(ErrorCode::MISSING_RPAREN, (*(tk - 1))->line);
             }
-            if ((*tk)->token_type == SEMICN) {
+            if ((*tk)->token_type == TokenCode::SEMICN) {
                 elements.push_back(*tk++);
             } else {
-                error(MISSING_SEMICN, (*(tk - 1))->line);
+                error(ErrorCode::MISSING_SEMICN, (*(tk - 1))->line);
             }
             instructions.push_back(make_shared<PrintF>(fmt_str));
             break;
@@ -632,10 +632,10 @@ void Parser::parse_stmt(TokenIter &tk, int nest_level) {
         default:
             parse_expr<NormalExpr>(tk, EMIT_IN_NORM_STMT);  // pre-fetch
             instructions.push_back(make_shared<PopTop>());
-            if ((*tk)->token_type == SEMICN) {
+            if ((*tk)->token_type == TokenCode::SEMICN) {
                 elements.push_back(*tk++);
             } else {
-                error(MISSING_SEMICN, (*(tk - 1))->line);
+                error(ErrorCode::MISSING_SEMICN, (*(tk - 1))->line);
             }
     }
     elements.push_back(make_shared<Statement>());
@@ -645,7 +645,7 @@ template<typename T>
 ObjectP Parser::parse_expr(TokenIter &tk, EmitMode emit_mode) {
     // Exp -> AddExp
     // ConstExp -> AddExp
-    ObjectP result = parse_addsub_expr(tk, emit_mode, NOTHING);
+    ObjectP result = parse_addsub_expr(tk, emit_mode, BinaryOpCode::NOTHING);
     elements.push_back(make_shared<T>());
     return result;
 }
@@ -654,7 +654,7 @@ ObjectP Parser::parse_cond_expr(TokenIter &tk, EmitMode emit_mode, vector<JumpIn
                                 vector<JumpInstructionP> *control_jump_instructions) {
     // Cond -> LOrExp
     // the pointer argument is preserved for condition expression outside control flow
-    ObjectP result = parse_logical_or_expr(tk, emit_mode, NOTHING, eval_jump_instructions,
+    ObjectP result = parse_logical_or_expr(tk, emit_mode, BinaryOpCode::NOTHING, eval_jump_instructions,
                                            control_jump_instructions);
     elements.push_back(make_shared<ConditionExpr>());
     return result;
@@ -667,26 +667,26 @@ ObjectP Parser::check_ident_valid_use(TokenIter &tk, bool is_called, bool is_ass
     for (auto p = sym_table.rbegin(); p != sym_table.rend(); ++p) {
         if (p->find(current->name) != p->end()) {
             result = (*p)[current->name];
-            if (is_called && result->type != FUNCTION) {
+            if (is_called && result->type != TypeCode::FUNCTION) {
                 cerr << "In source code line " << current->line << ", "
                      << *current << " is not callable" << endl;
             } else if (is_assigned && result->is_const) {
-                error(CANNOT_MODIFY_CONST, current->line);
+                error(ErrorCode::CANNOT_MODIFY_CONST, current->line);
             }
             return result;
         }
     }
-    error(IDENT_UNDEFINED, current->line);
+    error(ErrorCode::IDENT_UNDEFINED, current->line);
     return make_shared<Object>();
 }
 
 ObjectP Parser::parse_lvalue(TokenIter &tk, EmitMode emit_mode, bool is_assigned = false) {
     // LVal -> Ident { '[' Exp ']' }
     ObjectP result;
-    if ((*tk)->token_type == IDENFR) {
+    if ((*tk)->token_type == TokenCode::IDENFR) {
         result = check_ident_valid_use(tk, false, is_assigned);
         if ((emit_mode == EMIT_IN_VAR_DEF || emit_mode == EMIT_IN_NORM_STMT || emit_mode == EMIT_IN_COND_STMT) &&
-            (!is_assigned || has_type(tk, LBRACK))) {
+            (!is_assigned || has_type(tk, TokenCode::LBRACK))) {
             if (result->is_const) {
                 instructions.push_back(make_shared<LoadFast>(result));
             } else {
@@ -698,19 +698,19 @@ ObjectP Parser::parse_lvalue(TokenIter &tk, EmitMode emit_mode, bool is_assigned
     }
     vector<long long> indexes;
     int cnt;
-    for (cnt = 0; has_type(tk, LBRACK); cnt++) {
+    for (cnt = 0; has_type(tk, TokenCode::LBRACK); cnt++) {
         elements.push_back(*tk++);
         ObjectP index = parse_expr<NormalExpr>(tk, emit_mode);
-        if (index->type == INT) {
+        if (index->type == TypeCode::INT) {
             indexes.push_back(cast<IntObject>(index)->value);
         }
-        if ((*tk)->token_type == RBRACK) {
+        if ((*tk)->token_type == TokenCode::RBRACK) {
             elements.push_back(*tk++);
             if (emit_mode == EMIT_IN_VAR_DEF || emit_mode == EMIT_IN_NORM_STMT || emit_mode == EMIT_IN_COND_STMT) {
                 instructions.push_back(make_shared<SubscriptArray>());
             }
         } else {
-            error(MISSING_RBRACK, (*(tk - 1))->line);
+            error(ErrorCode::MISSING_RBRACK, (*(tk - 1))->line);
         }
     }
     ArrayObjectP array = cast<ArrayObject>(result);
@@ -737,19 +737,19 @@ ObjectP Parser::parse_primary_expr(TokenIter &tk, EmitMode emit_mode) {
     // PrimaryExp -> '(' Exp ')' | LVal | Number
     ObjectP result;
     switch ((*tk)->token_type) {
-        case LPARENT:
+        case TokenCode::LPARENT:
             elements.push_back(*tk++);
             result = parse_expr<NormalExpr>(tk, emit_mode);
-            if ((*tk)->token_type == RPARENT) {
+            if ((*tk)->token_type == TokenCode::RPARENT) {
                 elements.push_back(*tk++);
             } else {
-                error(MISSING_RPAREN, (*(tk - 1))->line);
+                error(ErrorCode::MISSING_RPAREN, (*(tk - 1))->line);
             }
             break;
-        case IDENFR:
+        case TokenCode::IDENFR:
             result = parse_lvalue(tk, emit_mode);  // pre-fetch
             break;
-        case INTCON:
+        case TokenCode::INTCON:
             result = parse_number(tk);  // pre-fetch
             if (emit_mode == EMIT_IN_VAR_DEF || emit_mode == EMIT_IN_NORM_STMT || emit_mode == EMIT_IN_COND_STMT) {
                 instructions.push_back(make_shared<LoadFast>(result));
@@ -770,32 +770,32 @@ IntObjectP Parser::parse_number(TokenIter &tk) {
     return result;
 }
 
-ObjectP Parser::parse_unary_expr(TokenIter &tk, EmitMode emit_mode, BinaryOpCode = NOTHING) {
+ObjectP Parser::parse_unary_expr(TokenIter &tk, EmitMode emit_mode, BinaryOpCode = BinaryOpCode::NOTHING) {
     // UnaryExp -> PrimaryExp | Ident '(' [FuncRParams] ')' | UnaryOp UnaryExp
     ObjectP result;
     switch ((*tk)->token_type) {
-        case IDENFR:
-            if (has_type(tk + 1, LPARENT)) {  // is function call
+        case TokenCode::IDENFR:
+            if (has_type(tk + 1, TokenCode::LPARENT)) {  // is function call
                 int line = (*tk)->line;
                 FuncObjectP func = cast<FuncObject>(check_ident_valid_use(tk, true));
                 elements.push_back(*tk++);
                 if (starts_with_expr(tk)) {
                     parse_func_real_params(tk, func, line);
                 } else if (func != nullptr && !func->params.empty()) {
-                    error(PARAM_AMOUNT_MISMATCH, line);
+                    error(ErrorCode::PARAM_AMOUNT_MISMATCH, line);
                 }
-                if ((*tk)->token_type == RPARENT) {
+                if ((*tk)->token_type == TokenCode::RPARENT) {
                     elements.push_back(*tk++);
                 } else {
-                    error(MISSING_RPAREN, (*(tk - 1))->line);
+                    error(ErrorCode::MISSING_RPAREN, (*(tk - 1))->line);
                 }
                 if (func != nullptr) {
                     instructions.push_back(make_shared<CallFunction>(func));
                     switch (func->return_type) {
-                        case VOID:
+                        case TypeCode::VOID:
                             result = make_shared<Object>();
                             break;
-                        case INT:
+                        case TypeCode::INT:
                             result = make_shared<IntObject>();
                             break;
                         default:
@@ -808,14 +808,14 @@ ObjectP Parser::parse_unary_expr(TokenIter &tk, EmitMode emit_mode, BinaryOpCode
                 result = parse_primary_expr(tk, emit_mode);  // pre-fetch LVal
             }
             break;
-        case PLUS:
-        case MINU:
-        case NOT: {
+        case TokenCode::PLUS:
+        case TokenCode::MINU:
+        case TokenCode::NOT: {
             UnaryOpCode opcode = parse_unary_op(tk);  // pre-fetch
             result = parse_unary_expr(tk, emit_mode);
             if (emit_mode == EMIT_IN_VAR_DEF || emit_mode == EMIT_IN_NORM_STMT || emit_mode == EMIT_IN_COND_STMT) {
                 instructions.push_back(make_shared<UnaryOperation>(opcode));
-            } else if (result->type == INT) {
+            } else if (result->type == TypeCode::INT) {
                 result = make_shared<IntObject>(util::unary_operation(opcode, cast<IntObject>(result)->value));
             }
             break;
@@ -832,9 +832,9 @@ UnaryOpCode Parser::parse_unary_op(TokenIter &tk) {
     elements.push_back(*tk++);
     elements.push_back(make_shared<UnaryOp>());
     switch (type) {
-        case PLUS: return UNARY_POSITIVE;
-        case MINU: return UNARY_NEGATIVE;
-        case NOT: return UNARY_NOT;
+        case TokenCode::PLUS: return UnaryOpCode::UNARY_POSITIVE;
+        case TokenCode::MINU: return UnaryOpCode::UNARY_NEGATIVE;
+        case TokenCode::NOT: return UnaryOpCode::UNARY_NOT;
         default: ERROR_EXPECTED_GOT(PLUS or MINU or NOT, tk);
     }
 }
@@ -849,24 +849,24 @@ void Parser::parse_func_real_params(TokenIter &tk, FuncObjectP &func, int func_l
             if (cnt < func->params.size()) {
                 ObjectP func_param = func->params[cnt];
                 switch (instance->type) {
-                    case INT:
-                        if (func_param->type != INT) {
-                            error(PARAM_TYPE_MISMATCH, func_line);
+                    case TypeCode::INT:
+                        if (func_param->type != TypeCode::INT) {
+                            error(ErrorCode::PARAM_TYPE_MISMATCH, func_line);
                         }
                         break;
-                    case INT_ARRAY: {
+                    case TypeCode::INT_ARRAY: {
                         ArrayObjectP array = cast<ArrayObject>(instance);
                         switch (func_param->type) {
-                            case INT:
+                            case TypeCode::INT:
                                 if (array->dims.size() - array->dereference_cnt != 0) {
-                                    error(PARAM_TYPE_MISMATCH, func_line);
+                                    error(ErrorCode::PARAM_TYPE_MISMATCH, func_line);
                                 }
                                 break;
-                            case INT_ARRAY: {
+                            case TypeCode::INT_ARRAY: {
                                 ArrayObjectP array_param = cast<ArrayObject>(func_param);
                                 if (array_param->dims.size() !=
                                     array->dims.size() - array->dereference_cnt) {
-                                    error(PARAM_TYPE_MISMATCH, func_line);
+                                    error(ErrorCode::PARAM_TYPE_MISMATCH, func_line);
                                 }
                                 break;
                             }
@@ -876,14 +876,14 @@ void Parser::parse_func_real_params(TokenIter &tk, FuncObjectP &func, int func_l
                         break;
                     }
                     default:
-                        error(PARAM_TYPE_MISMATCH, func_line);
+                        error(ErrorCode::PARAM_TYPE_MISMATCH, func_line);
                 }
             } else if (first_error) {
-                error(PARAM_AMOUNT_MISMATCH, func_line);
+                error(ErrorCode::PARAM_AMOUNT_MISMATCH, func_line);
                 first_error = false;
             }
         }
-        if ((*tk)->token_type == COMMA) {
+        if ((*tk)->token_type == TokenCode::COMMA) {
             elements.push_back(*tk++);
         } else {
             cnt++;
@@ -891,7 +891,7 @@ void Parser::parse_func_real_params(TokenIter &tk, FuncObjectP &func, int func_l
         }
     }
     if (func != nullptr && cnt < func->params.size()) {
-        error(PARAM_AMOUNT_MISMATCH, func_line);
+        error(ErrorCode::PARAM_AMOUNT_MISMATCH, func_line);
     }
     elements.push_back(make_shared<FuncRealParams>());
 }
@@ -901,22 +901,22 @@ ObjectP Parser::_parse_expr(TokenIter &tk, EmitMode emit_mode, BinaryOpCode last
                             ObjectP (Parser::*parse_first)(TokenIter &, EmitMode, BinaryOpCode),
                             BinaryOpCode (*predicate)(TokenCode)) {
     ObjectP result, tmp;
-    BinaryOpCode next_op = NOTHING;
+    BinaryOpCode next_op = BinaryOpCode::NOTHING;
     while (tk < tokens.end()) {
         tmp = (this->*parse_first)(tk, emit_mode, last_op);
-        if (result == nullptr || result->type == INT && tmp->type != INT) {
+        if (result == nullptr || result->type == TypeCode::INT && tmp->type != TypeCode::INT) {
             result = tmp;
         } else if ((emit_mode == NO_EMIT_IN_CONST_DEF || emit_mode == NO_EMIT_IN_FPARAMS || emit_mode == EMIT_IN_VAR_DEF) &&
-                   result->type == INT && tmp->type == INT) {
+                   result->type == TypeCode::INT && tmp->type == TypeCode::INT) {
             result = make_shared<IntObject>(
                     util::binary_operation(last_op, cast<IntObject>(result)->value, cast<IntObject>(tmp)->value));
         }
         if ((emit_mode == EMIT_IN_VAR_DEF || emit_mode == EMIT_IN_NORM_STMT || emit_mode == EMIT_IN_COND_STMT) &&
-            next_op != NOTHING && next_op == last_op) {
+            next_op != BinaryOpCode::NOTHING && next_op == last_op) {
             instructions.push_back(make_shared<BinaryOperation>(last_op));
         }
         next_op = predicate((*tk)->token_type);
-        if (next_op != NOTHING) {
+        if (next_op != BinaryOpCode::NOTHING) {
             last_op = next_op;
             elements.push_back(make_shared<T>());
             elements.push_back(*tk++);
@@ -960,11 +960,11 @@ ObjectP Parser::parse_logical_and_expr(TokenIter &tk, EmitMode emit_mode, Binary
     BinaryOpCode next_op;
     while (tk < tokens.end()) {
         tmp = parse_eq_expr(tk, emit_mode, last_op);
-        if (result == nullptr || result->type == INT && tmp->type != INT) {
+        if (result == nullptr || result->type == TypeCode::INT && tmp->type != TypeCode::INT) {
             result = tmp;
         }
         next_op = determine_and((*tk)->token_type);
-        if (next_op != NOTHING) {
+        if (next_op != BinaryOpCode::NOTHING) {
             last_op = next_op;
             auto bgz = make_shared<PopJumpIfFalse>();
             instructions.push_back(bgz);
@@ -989,11 +989,11 @@ ObjectP Parser::parse_logical_or_expr(TokenIter &tk, EmitMode emit_mode, BinaryO
     while (tk < tokens.end()) {
         vector<JumpInstructionP> and_eval_jump_instructions;
         tmp = parse_logical_and_expr(tk, emit_mode, last_op, and_eval_jump_instructions);
-        if (result == nullptr || result->type == INT && tmp->type != INT) {
+        if (result == nullptr || result->type == TypeCode::INT && tmp->type != TypeCode::INT) {
             result = tmp;
         }
         next_op = determine_or((*tk)->token_type);
-        if (next_op != NOTHING) {
+        if (next_op != BinaryOpCode::NOTHING) {
             last_op = next_op;
             auto bgz = make_shared<PopJumpIfTrue>();
             instructions.push_back(bgz);

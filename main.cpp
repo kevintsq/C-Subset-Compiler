@@ -16,6 +16,10 @@ int main() {
 
     if (error.errors.empty()) {
         ofstream result("pcoderesult.txt");
+        if (!result.is_open()) {
+            perror("Failed to create result file");
+            exit(EXIT_FAILURE);
+        }
         StackMachine machine(parser.instructions, parser.sym_table.back(), result);
         cout << machine;
         auto start = chrono::high_resolution_clock::now();
@@ -24,6 +28,10 @@ int main() {
         cout << "Process finished in " << duration_s.count() << " seconds" << endl;
     } else {
         ofstream error_stream("error.txt");
+        if (!error_stream.is_open()) {
+            perror("Failed to create error file");
+            exit(EXIT_FAILURE);
+        }
         error_stream << error;
     }
     return EXIT_SUCCESS;

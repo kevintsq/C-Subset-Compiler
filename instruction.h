@@ -36,11 +36,11 @@ public:
     explicit LoadName(const ObjectP &object) : Instruction(NAME(LOAD_NAME) "\t\t"), object(object) {
         IdentP i = object->ident_info;
         switch (object->type) {
-            case INT: {
+            case TypeCode::INT: {
                 name << i->name << "\t\t(INT, declared in line " << i->line << ')';
                 break;
             }
-            case INT_ARRAY: {
+            case TypeCode::INT_ARRAY: {
                 name << i->name << "\t\t(INT_ARRAY, declared in line " << i->line << ')';
                 break;
             }
@@ -57,7 +57,7 @@ public:
 
     explicit LoadFast(const ObjectP &object) : Instruction(NAME(LOAD_FAST) "\t\t"), object(object) {
         switch (object->type) {
-            case INT: {
+            case TypeCode::INT: {
                 auto o = cast<IntObject>(object);
                 if (object->ident_info == nullptr) {
                     name << o->value;
@@ -67,7 +67,7 @@ public:
                 }
                 break;
             }
-            case INT_ARRAY: {
+            case TypeCode::INT_ARRAY: {
                 auto o = cast<ArrayObject>(object);
                 if (object->ident_info != nullptr) {
                     name << o->ident_info->name << "\t\t(INT_ARRAY, declared in line "
@@ -75,7 +75,7 @@ public:
                 }
                 break;
             }
-            case CHAR_ARRAY:
+            case TypeCode::CHAR_ARRAY:
                 name << "\t\t" << cast<StringObject>(object)->value;
                 break;
             default:
@@ -112,10 +112,10 @@ public:
         IdentP i = object->ident_info;
         if (i != nullptr) {
             switch (object->type) {
-                case INT:
+                case TypeCode::INT:
                     name << i->name << "\t\t(INT, declared in line " << i->line << ')';
                     break;
-                case INT_ARRAY:
+                case TypeCode::INT_ARRAY:
                     name << i->name << "\t\t(INT_ARRAY, declared in line " << i->line << ')';
                     break;
                 default:

@@ -33,7 +33,7 @@ class Parser {
     InstructionP entry_inst;
 
     vector<LoopInfo> loop_info;
-    TypeCode current_func_return_type = INT;
+    TypeCode current_func_return_type = TypeCode::INT;
     bool has_return_at_end = false;
 public:
     vector<ElementP> elements;
@@ -66,22 +66,26 @@ public:
 
     static inline bool starts_with_decl(const TokenIter &tk) {
         auto next = (*tk)->token_type;
-        return next == CONSTTK || (next == INTTK && (*(tk + 2))->token_type != LPARENT);
+        return next == TokenCode::CONSTTK ||
+               (next == TokenCode::INTTK && (*(tk + 2))->token_type != TokenCode::LPARENT);
     }
 
     static inline bool starts_with_func_def(const TokenIter &tk) {
         auto next = (*tk)->token_type;
-        return next == VOIDTK || (next == INTTK && (*(tk + 1))->token_type != MAINTK && (*(tk + 2))->token_type == LPARENT);
+        return next == TokenCode::VOIDTK ||
+               (next == TokenCode::INTTK &&
+                (*(tk + 1))->token_type != TokenCode::MAINTK &&
+                (*(tk + 2))->token_type == TokenCode::LPARENT);
     }
 
     static inline bool starts_with_expr(const TokenIter &tk) {
         switch ((*tk)->token_type) {
-            case LPARENT:
-            case IDENFR:
-            case INTCON:
-            case PLUS:
-            case MINU:
-            case NOT:
+            case TokenCode::LPARENT:
+            case TokenCode::IDENFR:
+            case TokenCode::INTCON:
+            case TokenCode::PLUS:
+            case TokenCode::MINU:
+            case TokenCode::NOT:
                 return true;
             default:
                 return false;
@@ -90,14 +94,14 @@ public:
 
     static inline bool starts_with_stmt(const TokenIter &tk) {
         switch ((*tk)->token_type) {
-            case LBRACE:
-            case SEMICN:
-            case IFTK:
-            case WHILETK:
-            case BREAKTK:
-            case CONTINUETK:
-            case RETURNTK:
-            case PRINTFTK:
+            case TokenCode::LBRACE:
+            case TokenCode::SEMICN:
+            case TokenCode::IFTK:
+            case TokenCode::WHILETK:
+            case TokenCode::BREAKTK:
+            case TokenCode::CONTINUETK:
+            case TokenCode::RETURNTK:
+            case TokenCode::PRINTFTK:
                 return true;
             default:
                 return starts_with_expr(tk);
@@ -106,60 +110,60 @@ public:
 
     static BinaryOpCode determine_addsub(TokenCode type) {
         switch (type) {
-            case PLUS:
-                return BINARY_ADD;
-            case MINU:
-                return BINARY_SUB;
+            case TokenCode::PLUS:
+                return BinaryOpCode::BINARY_ADD;
+            case TokenCode::MINU:
+                return BinaryOpCode::BINARY_SUB;
             default:
-                return NOTHING;
+                return BinaryOpCode::NOTHING;
         }
     }
 
     static BinaryOpCode determine_muldiv(TokenCode type) {
         switch (type) {
-            case MULT:
-                return BINARY_MUL;
-            case DIV:
-                return BINARY_DIV;
-            case MOD:
-                return BINARY_MOD;
+            case TokenCode::MULT:
+                return BinaryOpCode::BINARY_MUL;
+            case TokenCode::DIV:
+                return BinaryOpCode::BINARY_DIV;
+            case TokenCode::MOD:
+                return BinaryOpCode::BINARY_MOD;
             default:
-                return NOTHING;
+                return BinaryOpCode::NOTHING;
         }
     }
 
     static BinaryOpCode determine_relation(TokenCode type) {
         switch (type) {
-            case LSS:
-                return BINARY_LT;
-            case LEQ:
-                return BINARY_LE;
-            case GRE:
-                return BINARY_GT;
-            case GEQ:
-                return BINARY_GE;
+            case TokenCode::LSS:
+                return BinaryOpCode::BINARY_LT;
+            case TokenCode::LEQ:
+                return BinaryOpCode::BINARY_LE;
+            case TokenCode::GRE:
+                return BinaryOpCode::BINARY_GT;
+            case TokenCode::GEQ:
+                return BinaryOpCode::BINARY_GE;
             default:
-                return NOTHING;
+                return BinaryOpCode::NOTHING;
         }
     }
 
     static BinaryOpCode determine_equality(TokenCode type) {
         switch (type) {
-            case EQL:
-                return BINARY_EQ;
-            case NEQ:
-                return BINARY_NE;
+            case TokenCode::EQL:
+                return BinaryOpCode::BINARY_EQ;
+            case TokenCode::NEQ:
+                return BinaryOpCode::BINARY_NE;
             default:
-                return NOTHING;
+                return BinaryOpCode::NOTHING;
         }
     }
 
     static BinaryOpCode determine_or(TokenCode type) {
-        return type == OR ? BINARY_LOGICAL_OR : NOTHING;
+        return type == TokenCode::OR ? BinaryOpCode::BINARY_LOGICAL_OR : BinaryOpCode::NOTHING;
     }
 
     static BinaryOpCode determine_and(TokenCode type) {
-        return type == AND ? BINARY_LOGICAL_AND : NOTHING;
+        return type == TokenCode::AND ? BinaryOpCode::BINARY_LOGICAL_AND : BinaryOpCode::NOTHING;
     }
 
     template<typename T>

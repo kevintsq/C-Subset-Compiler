@@ -15,7 +15,7 @@
 
 using namespace std;
 
-enum ErrorCode {
+enum class ErrorCode {
     ILLEGAL_CHAR,
     IDENT_REDEFINED,
     IDENT_UNDEFINED,
@@ -43,7 +43,7 @@ public:
     heapq errors = heapq(cmp);
 
     inline void operator()(ErrorCode err, int line) {
-        errors.push({line, 'a' + err});
+        errors.emplace(line, 'a' + (char) err);
     }
 
     friend ostream &operator<<(ostream &out, Error &e) {

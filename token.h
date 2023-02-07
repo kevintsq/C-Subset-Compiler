@@ -59,7 +59,7 @@ struct FormatString : public Token, public StringObject {  // it's an r-data
 using FormatStringP = shared_ptr<FormatString>;
 
 struct MainToken : public Token, public FuncObject {
-    explicit MainToken(int line) : Token(line, NAME(MAINTK)" main"), FuncObject(INT) {
+    explicit MainToken(int line) : Token(line, NAME(MAINTK)" main"), FuncObject(TypeCode::INT) {
         this->ident_info = make_shared<Identifier>(line, "main");
     }
 };

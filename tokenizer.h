@@ -12,7 +12,7 @@ class Tokenizer {
 public:
     vector<TokenP> tokens;
 
-    explicit Tokenizer(const char *filename, Error &error);
+    explicit Tokenizer(const string &filename, Error &error);
 
     static inline bool isalnum_(char c) {
         return isalnum(c) || c == '_';

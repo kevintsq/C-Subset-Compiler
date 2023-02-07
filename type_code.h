@@ -5,7 +5,7 @@
 #ifndef CODE_TYPE_CODE_H
 #define CODE_TYPE_CODE_H
 
-enum TypeCode {
+enum class TypeCode {
     VOID,
     INT,
     INT_ARRAY,

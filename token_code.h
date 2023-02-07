@@ -5,7 +5,7 @@
 #ifndef CODE_TOKEN_CODE_H
 #define CODE_TOKEN_CODE_H
 
-enum TokenCode {
+enum TokenCode {  // cannot use enum class because of macro string printing
     IDENFR,
     INTCON,
     STRCON,

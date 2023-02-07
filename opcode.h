@@ -5,7 +5,7 @@
 #ifndef CODE_OPCODE_H
 #define CODE_OPCODE_H
 
-enum OpCode {
+enum OpCode {  // cannot use enum class because of macro string printing
     LOAD_NAME,
     LOAD_FAST,
     STORE_NAME,
@@ -30,13 +30,13 @@ enum OpCode {
     NOP
 };
 
-enum UnaryOpCode {
+enum UnaryOpCode {  // cannot use enum class because of macro string printing
     UNARY_POSITIVE,
     UNARY_NEGATIVE,
     UNARY_NOT
 };
 
-enum BinaryOpCode {
+enum BinaryOpCode {  // cannot use enum class because of macro string printing
     NOTHING = 0,
     BINARY_ADD,
     BINARY_SUB,
